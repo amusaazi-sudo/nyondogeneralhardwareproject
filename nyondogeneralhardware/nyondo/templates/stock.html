@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="table-responsive">
+  <table class="table table-bordered table-striped table-hover">
+    <caption class="text-center fw-bold">Stock Records</caption>
+    <thead class="table-primary">
+      <tr>
+        <th>Productname</th>
+        <th>Productcode</th>
+        <th>Category</th>
+        <th>Quantity</th>
+        <th>Buyingprice</th>
+        <th>Sellingprice</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- {% if sales %} -->
+        {% for stock in stocks %}
+        <tr>
+          <td>{{ stock.product_name  }}</td>
+          <td>{{ stock.product_code }}</td>
+          <td>{{ stock.category }}</td>
+          <td>{{ stock.quantity }}</td>
+          <td>{{ stock.buying_price }}</td>
+          <td>{{ stock.selling_price }}</td>
+          <td>
+            <a href="{% url 'edit_stock' stock.id %}" class="btn btn-sm btn-warning">Edit</a>
+            <a href="{% url 'delete_stock' stock.id %}" class="btn btn-sm btn-danger">Delete</a>
+          </td>
+        </tr>
+        {% endfor %}
+      <!-- {% else %} -->
+        <tr>
+          <!-- <td colspan="6" class="text-center text-muted">No stock recorded yet.</td> -->
+        </tr>
+      <!-- {% endif %} -->
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

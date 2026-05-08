@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<link rel="stylesheet" href="/nyondogeneralhardware/nyondo/static/salesreg.css">
+<div class="container mt-4">
+  <h2 class="mb-4">Stock Records</h2>
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+
+    <!-- Productname -->
+    <div class="col-md-6">
+      <label for="product_name" class="form-label">Product name</label>
+      <input type="text" class="form-control" id="product_name" name="product_name" required>
+    </div>
+
+    <!-- Productcode-->
+    <div class="col-md-6">
+      <label for="productcode" class="form-label">Product code</label>
+      <input type="text" class="form-control" id="product_code" name="product_code" required>
+    </div>
+
+    <!-- Category -->
+    <div class="col-md-6">
+      <label for="category" class="form-label">Category</label>
+      <select id="category" class="form-select" name="category" required>
+        <option value="" selected disabled>Choose...</option>
+        <option value="plumbing">Plumbing</option>
+        <option value="tools">tools</option>
+        <option value="electrical">electrical</option>
+      </select>
+    </div>
+
+    <!-- Quantity -->
+    <div class="col-md-6">
+      <label for="quantity" class="form-label">Quantity</label>
+      <input type="number" class="form-control" id="quantity" name="quantity" placeholder="e.g. 500 sacks" required>
+    </div>
+
+    <!--buying price -->
+    <div class="col-md-6">
+      <label for="buying_price" class="form-label">buying_price</label>
+      <input type="number" class="form-control" id="buying_price" name="buying_price" required>
+    </div>
+
+     <!--selling price -->
+    <div class="col-md-6">
+      <label for="selling_price" class="form-label">selling_price</label>
+      <input type="number" class="form-control" id="selling_price" name="selling_price" required>
+    </div>
+
+
+    <!-- Submit Button -->
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">  <a href="stock.html"></a>ADD STOCK</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

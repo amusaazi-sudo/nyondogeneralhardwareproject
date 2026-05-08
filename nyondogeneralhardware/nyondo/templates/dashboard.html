@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h2>
+
+    <!-- Row of summary cards -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Sales</h5>
+                    <p class="card-text">Total: 120</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Stock</h5>
+                    <p class="card-text">Items: 450</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Transport</h5>
+                    <p class="card-text">Trips: 32</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Credit Scheme</h5>
+                    <p class="card-text">Active: 15</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent activity table -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <i class="bi bi-bar-chart"></i> Recent Reports
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Activity</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2026-05-07</td>
+                        <td>Sale recorded</td>
+                        <td><span class="badge bg-success">Completed</span></td>
+                    </tr>
+                    <tr>
+                        <td>2026-05-06</td>
+                        <td>Stock updated</td>
+                        <td><span class="badge bg-info">Pending</span></td>
+                    </tr>
+                    <tr>
+                        <td>2026-05-05</td>
+                        <td>Transport trip logged</td>
+                        <td><span class="badge bg-success">Completed</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

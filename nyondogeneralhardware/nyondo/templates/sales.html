@@ -20,12 +20,12 @@
         <tr>
           <td>{{ sale.product_sold }}</td>
           <td>{{ sale.date }}</td>
-          <td>{{ sale.quantity }}</td>
+          <td>{{ sale.quantity_sold }}</td>
           <td>{{ sale.receipt_number }}</td>
           <td>{{ sale.payment_method }}</td>
           <td>
-            <a href="{% url 'edit_sale' sale.id %}" class="btn btn-sm btn-warning">Edit</a>
-            <a href="{% url 'delete_sale' sale.id %}" class="btn btn-sm btn-danger">Delete</a>
+            <a href="#" class="btn btn-sm btn-warning">Edit</a>
+            <a href="#" class="btn btn-sm btn-danger">Delete</a>
           </td>
         </tr>
         {% endfor %}

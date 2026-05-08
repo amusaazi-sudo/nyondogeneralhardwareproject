@@ -16,7 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from nyondo import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("", views.dashboard, name="dashboard"),
+    path("stocks/", views.stocks, name="stocks"),
+    path("add_stock/", views.add_stock, name="add_stock"),  
+    path("sales/", views.sales, name="sales"),   
+    path("add_sales/", views.add_sales, name="add_sales"),
+    
 ]
