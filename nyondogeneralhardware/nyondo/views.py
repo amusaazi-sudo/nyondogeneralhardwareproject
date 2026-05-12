@@ -83,10 +83,66 @@ def dashboard(request):
     }
     return render(request, "dashboard.html", context)
 
+def sales_dashboard(request):
+    return render(request, 'sales_dashboard.html')
 
-
-
-
-
-
+def stock_dashboard(request):
+    return render(request, 'stock_dashboard.html')
         
+# def deposit_create(request):
+#     """Create a new deposit receipt"""
+#     if request.method == 'POST':
+#         # Create new deposit from form data
+#         deposit = Deposit(
+#             receipt_number=request.POST.get('receipt_number'),
+#             date=request.POST.get('date'),
+#             customer_name=request.POST.get('customer_name'),
+#             NIN=request.POST.get('NIN'),
+#             contact=request.POST.get('contact'),
+#             signature=request.POST.get('signature'),
+#             deposit_amount=request.POST.get('deposit_amount'),
+#             expiry_date=request.POST.get('expiry_date'),
+#             total_balance=request.POST.get('total_balance')
+#         )
+#         deposit.save()
+#         messages.success(request, 'Deposit saved successfully!')
+#         return redirect('deposit_list')
+    
+#     return render(request, 'deposit_form.html')
+
+# def deposit_list(request):
+#     """Display all deposits"""
+#     deposits = Deposit.objects.all()
+#     return render(request, 'deposit_list.html', {'deposits': deposits})
+
+# def deposit_edit(request, pk):
+#     """Edit a deposit"""
+#     deposit = get_object_or_404(Deposit, pk=pk)
+    
+#     if request.method == 'POST':
+#         # Update the deposit with new values
+#         deposit.receipt_number = request.POST.get('receipt_number')
+#         deposit.date = request.POST.get('date')
+#         deposit.customer_name = request.POST.get('customer_name')
+#         deposit.NIN = request.POST.get('NIN')
+#         deposit.contact = request.POST.get('contact')
+#         deposit.signature = request.POST.get('signature')
+#         deposit.deposit_amount = request.POST.get('deposit_amount')
+#         deposit.expiry_date = request.POST.get('expiry_date')
+#         deposit.total_balance = request.POST.get('total_balance')
+#         deposit.save()
+#         messages.success(request, 'Deposit updated successfully!')
+#         return redirect('deposit_list')
+    
+#     return render(request, 'deposit_edit.html', {'deposit': deposit})
+
+# def deposit_delete(request, pk):
+#     """Delete a deposit"""
+#     deposit = get_object_or_404(Deposit, pk=pk)
+    
+#     if request.method == 'POST':
+#         deposit.delete()
+#         messages.success(request, 'Deposit deleted successfully!')
+#         return redirect('deposit_list')
+    
+#     return render(request, 'deposit_confirm_delete.html', {'deposit': deposit})

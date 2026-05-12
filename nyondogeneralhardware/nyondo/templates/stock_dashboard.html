@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <!-- Header with Back Button -->
+    <div class="card mb-4" style="background-color: #000000; border: none; border-top: 5px solid #64B5F6;">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm mb-2">← Back to Dashboard</a>
+                    <h2 class="text-white mb-0">
+                        <i class="bi bi-box-seam"></i> Stock Dashboard
+                    </h2>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="{% url 'add_stock' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Stock
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Summary Cards -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-3"
+                style="background-color: plum; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
+                <div class="card-body">
+                    <h5 class="card-title text-white">Total Items</h5>
+                    <h3 class="text-white">450</h3>
+                    <small class="text-white-50">In stock</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card mb-3"
+                style="background-color: peru; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
+                <div class="card-body">
+                    <h5 class="card-title text-white">Low Stock</h5>
+                    <h3 class="text-warning">23</h3>
+                    <small class="text-white-50">Need reorder</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card mb-3"
+                style="background-color: palevioletred; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
+                <div class="card-body">
+                    <h5 class="card-title text-white">Out of Stock</h5>
+                    <h3 class="text-danger">8</h3>
+                    <small class="text-white-50">Unavailable</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card mb-3"
+                style="background-color: pink; border: none; border-top: 3px solid #64B5F6; min-height: 120px;">
+                <div class="card-body">
+                    <h5 class="card-title text-white">Categories</h5>
+                    <h3 class="text-white">12</h3>
+                    <small class="text-white-50">Product types</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Items Table -->
+    <div class="card mt-4" style="background-color: #000000; border: none; border-top: 5px solid #64B5F6;">
+        <div class="card-header bg-transparent" style="border-bottom: 1px solid #333;">
+            <span class="text-white"><i class="bi bi-list-check"></i> Current Stock Items</span>
+        </div>
+        <div class="card-body">
+            <table class="table table-dark table-striped">
+                <thead>
+                    <tr class="text-white">
+                        <th>Productname</th>
+                        <th>Productcode</th>
+                        <th>Category</th>
+                        <th>Quantity</th>
+                        <th>Buyingprice</th>
+                        <th>Sellingprice</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-white">Cement</td>
+                        <td class="text-white">001</td>
+                        <td class="text-white">building</td>
+                        <td class="text-white">50(kgs)</td>
+                        <td class="text-white">Ugx 60000</td>
+                        <td class="text-white">Ugx 80000</td>
+                        <td><span class="badge bg-success">In Stock</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-white">Iron Sheets</td>
+                        <td class="text-white">002</td>
+                        <td class="text-white">Tools</td>
+                        <td class="text-white">120 pcs</td>
+                        <td class="text-white">Ugx 90000</td>
+                        <td class="text-white">Ugx 60000</td>
+                        <td><span class="badge bg-success">In Stock</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-white">Nails</td>
+                        <td class="text-white">003</td>
+                        <td class="text-white">Tools</td>
+                        <td class="text-white">15 kg</td>
+                        <td class="text-white">Ugx 30000</td>
+                        <td class="text-white">Ugx 20000</td>
+                        <td><span class="badge bg-warning">Low Stock</span></td>
+                    </tr>
+                    <!-- <tr>
+                        <td class="text-white">Paint (5L)</td>
+                        <td class="text-white">0</td>
+                        <td class="text-white">KES 2,500</td>
+                        <td><span class="badge bg-danger">Out of Stock</span></td>
+                    </tr> -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .table-dark {
+        --bs-table-bg: #000000;
+        --bs-table-striped-bg: #1a1a1a;
+    }
+</style>
+{% endblock %}

@@ -21,9 +21,11 @@ from nyondo import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", views.dashboard, name="dashboard"),
-    path("stocks/", views.stocks, name="stocks"),
-    path("add_stock/", views.add_stock, name="add_stock"),  
+    path("sales/", views.sales_dashboard, name="sales_dashboard"),
     path("sales/", views.sales, name="sales"),   
     path("add_sales/", views.add_sales, name="add_sales"),
+    path("stocks/", views.stock_dashboard, name="stock_dashboard"),
+    path("stocks/", views.stocks, name="stocks"),
+    path("add_stock/", views.add_stock, name="add_stock"),  
     
 ]

@@ -1,77 +1,153 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container-fluid">
-    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Dashboard</h2>
-
-    <!-- Row of summary cards -->
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Sales</h5>
-                    <p class="card-text">Total: 120</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Stock</h5>
-                    <p class="card-text">Items: 450</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-warning mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Transport</h5>
-                    <p class="card-text">Trips: 32</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Credit Scheme</h5>
-                    <p class="card-text">Active: 15</p>
-                </div>
+<div class="card mb-4" style="background-color: #000000; border: none; border-top: 3px solid #64B5F6;">
+    <div class="card-body">
+        <h2 class="text-white mb-0">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h2>
+    </div>
+</div>
+<!-- Row of summary cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3" style="background-color: peru; border: none; border-top: 3px solid #64B5F6;">
+            <div class="card-body">
+                <h5 class="card-title text-white">Sales</h5>
+                <p class="card-text text-white">Total: 120</p>
             </div>
         </div>
     </div>
-
-    <!-- Recent activity table -->
-    <div class="card mt-4">
-        <div class="card-header">
-            <i class="bi bi-bar-chart"></i> Recent Reports
+    <div class="col-md-3">
+        <div class="card mb-3" style="background-color: palevioletred; border: none; border-top: 3px solid #64B5F6;">
+            <div class="card-body">
+                <h5 class="card-title text-white">Stock</h5>
+                <p class="card-text text-white">Items: 450</p>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Activity</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>2026-05-07</td>
-                        <td>Sale recorded</td>
-                        <td><span class="badge bg-success">Completed</span></td>
-                    </tr>
-                    <tr>
-                        <td>2026-05-06</td>
-                        <td>Stock updated</td>
-                        <td><span class="badge bg-info">Pending</span></td>
-                    </tr>
-                    <tr>
-                        <td>2026-05-05</td>
-                        <td>Transport trip logged</td>
-                        <td><span class="badge bg-success">Completed</span></td>
-                    </tr>
-                </tbody>
-            </table>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3" style="background-color: gray; border: none; border-top: 3px solid #64B5F6;">
+            <div class="card-body">
+                <h5 class="card-title text-white">Transport</h5>
+                <p class="card-text text-white">Trips: 32</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3" style="background-color: palegreen; border: none; border-top: 3px solid #64B5F6;">
+            <div class="card-body">
+                <h5 class="card-title text-white">Credit Scheme</h5>
+                <p class="card-text text-white">Active: 15</p>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Deposit and Receipts Cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-3" style="background-color: peachpuff; border: none; border-top: 3px solid #64B5F6;">
+            <div class="card-body">
+                <h5 class="card-title text-white">Deposit Scheme</h5>
+                <p class="card-text text-white">Total: KES 245,000</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3" style="background-color: rosybrown; border: none; border-top: 3px solid #64B5F6;">
+            <div class="card-body">
+                <h5 class="card-title text-white">Receipts</h5>
+                <p class="card-text text-white">Today: 5 receipts</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Receipts Table -->
+<div class="card mt-4" style="background-color: #000000; border: none; border-top: 3px solid #64B5F6;">
+    <div class="card-header bg-transparent" style="border-bottom: 1px solid #333;">
+        <i class="bi bi-receipt text-white"></i>
+        <span class="text-white"> Recent Receipts</span>
+    </div>
+    <div class="card-body">
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th class="text-white">Receipt No</th>
+                    <th class="text-white">Customer</th>
+                    <th class="text-white">Amount</th>
+                    <th class="text-white">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-white">#REC-001</td>
+                    <td class="text-white">John M.</td>
+                    <td class="text-white">UGX 5,200</td>
+                    <td class="text-white">2026-05-07</td>
+                </tr>
+                <tr>
+                    <td class="text-white">#REC-002</td>
+                    <td class="text-white">Mary W.</td>
+                    <td class="text-white">UGX 12,800</td>
+                    <td class="text-white">2026-05-07</td>
+                </tr>
+                <tr>
+                    <td class="text-white">#REC-003</td>
+                    <td class="text-white">Peter O.</td>
+                    <td class="text-white">UGX 3,450</td>
+                    <td class="text-white">2026-05-06</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Reports Table -->
+<div class="card mt-4" style="background-color: #000000; border: none; border-top: 3px solid #64B5F6;">
+    <div class="card-header bg-transparent" style="border-bottom: 1px solid #333;">
+        <i class="bi bi-bar-chart text-white"></i>
+        <span class="text-white"> Recent Reports</span>
+    </div>
+    <div class="card-body">
+        <table class="table table-dark table-striped">
+            <thead>
+                <tr>
+                    <th class="text-white">Date</th>
+                    <th class="text-white">Activity</th>
+                    <th class="text-white">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-white">2026-05-07</td>
+                    <td class="text-white">Sale recorded</td>
+                    <td><span class="badge bg-success">Completed</span></td>
+                </tr>
+                <tr>
+                    <td class="text-white">2026-05-06</td>
+                    <td class="text-white">Stock updated</td>
+                    <td><span class="badge bg-info">Pending</span></td>
+                </tr>
+                <tr>
+                    <td class="text-white">2026-05-05</td>
+                    <td class="text-white">Transport trip logged</td>
+                    <td><span class="badge bg-success">Completed</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<style>
+    .table-dark {
+        --bs-table-bg: #000000;
+        --bs-table-striped-bg: #1a1a1a;
+    }
+
+    .card-header {
+        background-color: transparent !important;
+    }
+</style>
 {% endblock %}

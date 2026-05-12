@@ -20,3 +20,15 @@ class Sale(models.Model):
     quantity_sold = models.PositiveIntegerField()
     receipt_number = models.PositiveBigIntegerField(unique=True)
     payment_method = models.TextField(max_length=50)
+
+
+class Deposit(models.Model):
+    receipt_number = models.CharField(max_length=50)
+    date = models.DateField(auto_now_add=True)
+    customer_name = models.CharField(max_length=200)
+    NIN = models.TextField(max_length=50, blank=True, null=True)
+    contact = models.IntegerField(max_length=20)
+    signature = models.CharField(max_length=100, blank=True, null=True)
+    deposit_amount = models.IntegerField(max_digits=12)
+    expiry_date = models.DateField()
+    total_balance = models.IntegerField(max_digits=12, decimal_places=2)

@@ -90,10 +90,11 @@
     <p>"Quality meets Hardwork"</p>
     <p>Located at Ssonde, Mukono</p>
     <p>+256 705 643 214 | +256 778 435 256</p>
-    <p><strong>TEMPORARY DEPOSIT</strong></p>
+    <p><strong> DEPOSIT</strong></p>
     <hr>
 
-    <form>
+    <form method="POST">
+      {% csrf_token %}
       <!-- Receipt No and Date -->
       <div class="form-row">
         <div class="form-group">
@@ -148,7 +149,7 @@
         <input type="number" placeholder="UGX 100,000" name="total_balance">
       </div>
 
-      <button type="submit">PUBLISH</button>
+      <button type="submit">ISSUE</button>
     </form>
   </div>
 </body>

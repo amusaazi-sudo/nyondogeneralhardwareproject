@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Deposit Dashboard</h2>
+<table>
+  <tr>
+    <th>Receipt No</th>
+    <th>Date</th>
+    <th>Customer Name</th>
+    <th>NIN</th>
+    <th>Contact</th>
+    <th>signature</th>
+    <th>Amount</th>
+    <th>Expiry</th>
+    <th>Balance</th>
+    <th>Action</th>
+  </tr>
+  {% for deposit in deposits %}
+  <tr>
+     <td>{{ deposit.receipt_number }}</td>
+     <td>{{ deposit.date }}</td>
+     <td>{{ deposit.customer_name }}</td>
+     <td>{{ deposit.NIN }}</td>
+     <td>{{ deposit.contact }}</td>
+     <td>{{ deposit.signature }}</td>
+    <td>{{ deposit.deposit_amount }}</td>
+     <td>{{ deposit.expiry_date }}</td>
+    <td>{{ deposit.total_balance }}</td>
+    <td>
+      <a href="{% url 'deposit_edit' deposit.id %}">Edit</a> |
+      <a href="{% url 'deposit_delete' deposit.id %}">delete</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
