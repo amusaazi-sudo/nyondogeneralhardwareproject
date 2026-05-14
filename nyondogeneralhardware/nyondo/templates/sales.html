@@ -16,23 +16,23 @@
     </thead>
     <tbody>
       <!-- {% if sales %} -->
-        {% for sale in sales %}
-        <tr>
-          <td>{{ sale.product_sold }}</td>
-          <td>{{ sale.date }}</td>
-          <td>{{ sale.quantity_sold }}</td>
-          <td>{{ sale.receipt_number }}</td>
-          <td>{{ sale.payment_method }}</td>
-          <td>
-            <a href="#" class="btn btn-sm btn-warning">Edit</a>
-            <a href="#" class="btn btn-sm btn-danger">Delete</a>
-          </td>
-        </tr>
-        {% endfor %}
+      {% for sale in sales %}
+      <tr>
+        <td>{{ sale.product_sold }}</td>
+        <td>{{ sale.date }}</td>
+        <td>{{ sale.quantity_sold }}</td>
+        <td>{{ sale.receipt_number }}</td>
+        <td>{{ sale.payment_method }}</td>
+        <td>
+          <a href="#" class="btn btn-sm btn-warning">Edit</a>
+          <a href="#" class="btn btn-sm btn-danger">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
       <!-- {% else %} -->
-        <tr>
-          <td colspan="6" class="text-center text-muted">No sales recorded yet.</td>
-        </tr>
+      <tr>
+        <td colspan="6" class="text-center text-muted">No sales recorded yet.</td>
+      </tr>
       <!-- {% endif %} -->
     </tbody>
   </table>

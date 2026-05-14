@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Delete Stock</h2>
+  <p>Are you sure you want to delete <strong>{{ stock.product_name }}</strong>?</p>
+  <form method="post" action="{% url 'stock_delete' stock.pk %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'stock_dashboard' %}" class="btn btn-secondary" style="text-decoration: none;">Cancel</a>
+  </form>
+</div>
+{% endblock %}

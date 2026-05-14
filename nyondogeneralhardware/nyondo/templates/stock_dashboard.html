@@ -6,13 +6,13 @@
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm mb-2">← Back to Dashboard</a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm mb-2" style="text-decoration: none;">← Back to Dashboard</a>
                     <h2 class="text-white mb-0">
                         <i class="bi bi-box-seam"></i> Stock Dashboard
                     </h2>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="{% url 'add_stock' %}" class="btn btn-primary">
+                    <a href="{% url 'add_stock' %}" class="btn btn-primary" style="text-decoration: none;">
                         <i class="bi bi-plus-circle"></i> Add Stock
                     </a>
                 </div>
@@ -27,7 +27,7 @@
                 style="background-color: plum; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
                 <div class="card-body">
                     <h5 class="card-title text-white">Total Items</h5>
-                    <h3 class="text-white">450</h3>
+                    <h3 class="text-white">{{ total_items }}</h3>
                     <small class="text-white-50">In stock</small>
                 </div>
             </div>
@@ -37,7 +37,7 @@
                 style="background-color: peru; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
                 <div class="card-body">
                     <h5 class="card-title text-white">Low Stock</h5>
-                    <h3 class="text-warning">23</h3>
+                    <h3 class="text-warning">{{ low_stock }}</h3>
                     <small class="text-white-50">Need reorder</small>
                 </div>
             </div>
@@ -47,7 +47,7 @@
                 style="background-color: palevioletred; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
                 <div class="card-body">
                     <h5 class="card-title text-white">Out of Stock</h5>
-                    <h3 class="text-danger">8</h3>
+                    <h3 class="text-danger">{{ out_of_stock }}</h3>
                     <small class="text-white-50">Unavailable</small>
                 </div>
             </div>
@@ -57,7 +57,7 @@
                 style="background-color: pink; border: none; border-top: 3px solid #64B5F6; min-height: 120px;">
                 <div class="card-body">
                     <h5 class="card-title text-white">Categories</h5>
-                    <h3 class="text-white">12</h3>
+                    <h3 class="text-white">{{ category_count }}</h3>
                     <small class="text-white-50">Product types</small>
                 </div>
             </div>
@@ -73,49 +73,37 @@
             <table class="table table-dark table-striped">
                 <thead>
                     <tr class="text-white">
-                        <th>Productname</th>
-                        <th>Productcode</th>
+                        <th>Product Name</th>
+                        <th>Product Code</th>
                         <th>Category</th>
                         <th>Quantity</th>
-                        <th>Buyingprice</th>
-                        <th>Sellingprice</th>
+                        <th>Buying Price</th>
+                        <th>Selling Price</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for stock in stocks %}
                     <tr>
-                        <td class="text-white">Cement</td>
-                        <td class="text-white">001</td>
-                        <td class="text-white">building</td>
-                        <td class="text-white">50(kgs)</td>
-                        <td class="text-white">Ugx 60000</td>
-                        <td class="text-white">Ugx 80000</td>
-                        <td><span class="badge bg-success">In Stock</span></td>
+                        <td class="text-white">{{ stock.product_name }}</td>
+                        <td class="text-white">{{ stock.product_code }}</td>
+                        <td class="text-white">{{ stock.category }}</td>
+                        <td class="text-white">{{ stock.quantity }}</td>
+                        <td class="text-white">Ugx {{ stock.buying_price }}</td>
+                        <td class="text-white">Ugx {{ stock.selling_price }}</td>
+                        <td>
+                            {% if stock.quantity == 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% elif stock.quantity <= 10 %}
+                                <span class="badge bg-warning">Low Stock</span>
+                            {% else %}
+                                <span class="badge bg-success">In Stock</span>
+                            {% endif %}
+                        </td>
                     </tr>
-                    <tr>
-                        <td class="text-white">Iron Sheets</td>
-                        <td class="text-white">002</td>
-                        <td class="text-white">Tools</td>
-                        <td class="text-white">120 pcs</td>
-                        <td class="text-white">Ugx 90000</td>
-                        <td class="text-white">Ugx 60000</td>
-                        <td><span class="badge bg-success">In Stock</span></td>
-                    </tr>
-                    <tr>
-                        <td class="text-white">Nails</td>
-                        <td class="text-white">003</td>
-                        <td class="text-white">Tools</td>
-                        <td class="text-white">15 kg</td>
-                        <td class="text-white">Ugx 30000</td>
-                        <td class="text-white">Ugx 20000</td>
-                        <td><span class="badge bg-warning">Low Stock</span></td>
-                    </tr>
-                    <!-- <tr>
-                        <td class="text-white">Paint (5L)</td>
-                        <td class="text-white">0</td>
-                        <td class="text-white">KES 2,500</td>
-                        <td><span class="badge bg-danger">Out of Stock</span></td>
-                    </tr> -->
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-white-50">No stock recorded yet.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -126,14 +114,18 @@
     .card {
         transition: transform 0.2s;
     }
-
     .card:hover {
         transform: translateY(-5px);
     }
-
     .table-dark {
         --bs-table-bg: #000000;
         --bs-table-striped-bg: #1a1a1a;
+    }
+    a {
+        text-decoration: none;
+    }
+    a:not(.btn) {
+        color: inherit;
     }
 </style>
 {% endblock %}

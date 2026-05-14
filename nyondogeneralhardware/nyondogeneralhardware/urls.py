@@ -20,12 +20,20 @@ from nyondo import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+
     path("", views.dashboard, name="dashboard"),
     path("sales/", views.sales_dashboard, name="sales_dashboard"),
-    path("sales/", views.sales, name="sales"),   
+    path("sales-list/", views.sales, name="sales"),   
     path("add_sales/", views.add_sales, name="add_sales"),
+    path('sales/<int:pk>/edit/', views.sales_edit, name='sales_edit'),
+    path('sales/<int:pk>/delete/', views.sales_delete, name='sales_delete'),
+#stock
+
     path("stocks/", views.stock_dashboard, name="stock_dashboard"),
-    path("stocks/", views.stocks, name="stocks"),
-    path("add_stock/", views.add_stock, name="add_stock"),  
+    path("stocks/list/", views.stocks, name="stocks"),
+    path("add_stock/", views.add_stock, name="add_stock"),
+    path('stock/<int:pk>/edit/', views.stock_edit, name='stock_edit'),
+    path('stock/<int:pk>/delete/', views.stock_delete, name='stock_delete'),
     
 ]

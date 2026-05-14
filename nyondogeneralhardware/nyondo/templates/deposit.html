@@ -26,8 +26,8 @@
      <td>{{ deposit.expiry_date }}</td>
     <td>{{ deposit.total_balance }}</td>
     <td>
-      <a href="{% url 'deposit_edit' deposit.id %}">Edit</a> |
-      <a href="{% url 'deposit_delete' deposit.id %}">delete</a>
+      <a href="{% url 'deposit_edit'  %}">Edit</a> |
+      <a href="{% url 'deposit_delete'  %}">delete</a>
     </td>
   </tr>
   {% endfor %}

@@ -12,13 +12,13 @@
     <!-- Productname -->
     <div class="col-md-6">
       <label for="product_name" class="form-label">Product name</label>
-      <input type="text" class="form-control" id="product_name" name="product_name" required>
+      <input type="text" class="form-control" id="product_name" name="product_name" required value="{{ stock.product_name }}">
     </div>
 
     <!-- Productcode-->
     <div class="col-md-6">
       <label for="productcode" class="form-label">Product code</label>
-      <input type="text" class="form-control" id="product_code" name="product_code" required>
+      <input type="text" class="form-control" id="product_code" name="product_code"  value="{{ stock.product_code }}" required>
     </div>
 
     <!-- Category -->
@@ -27,33 +27,33 @@
       <select id="category" class="form-select" name="category" required>
         <option value="" selected disabled>Choose...</option>
         <option value="plumbing">Plumbing</option>
-        <option value="tools">tools</option>
-        <option value="electrical">electrical</option>
+        <option value="electrical">Electrical</option>
+        <option value="building">Building</option>
       </select>
     </div>
 
     <!-- Quantity -->
     <div class="col-md-6">
       <label for="quantity" class="form-label">Quantity</label>
-      <input type="number" class="form-control" id="quantity" name="quantity" placeholder="e.g. 500 sacks" required>
+      <input type="number" class="form-control" id="quantity" name="quantity" placeholder="e.g. 500 sacks" required  value="{{ stock.quantity }}">
     </div>
 
     <!--buying price -->
     <div class="col-md-6">
       <label for="buying_price" class="form-label">buying_price</label>
-      <input type="number" class="form-control" id="buying_price" name="buying_price" required>
+      <input type="number" class="form-control" id="buying_price" name="buying_price" required value="{{ stock.buying_price }}">
     </div>
 
      <!--selling price -->
     <div class="col-md-6">
       <label for="selling_price" class="form-label">selling_price</label>
-      <input type="number" class="form-control" id="selling_price" name="selling_price" required>
+      <input type="number" class="form-control" id="selling_price" name="selling_price" required value="{{ stock.selling_price }}">
     </div>
 
 
     <!-- Submit Button -->
     <div class="col-12">
-      <button type="submit" class="btn btn-primary">  <a href="stock.html"></a>SAVE STOCK</button>
+      <button type="submit" class="btn btn-primary">SAVE STOCK</button>
     </div>
   </form>
 </div>

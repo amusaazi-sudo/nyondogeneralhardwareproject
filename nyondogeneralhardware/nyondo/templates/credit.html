@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Credit Dashboard</h2>
+<table>
+  <tr>
+    <th>Receipt No</th>
+    <th>Date</th>
+    <th>Customer Name</th>
+    <th>NIN</th>
+    <th>Contact</th>
+    <th>Amount</th>
+    <th>Expiry</th>
+    <th>Balance</th>
+    <th>Action</th>
+  </tr>
+  {% for credit in credits %}
+  <tr>
+     <td>{{ credit.receipt_number }}</td>
+     <td>{{ credit.date }}</td>
+     <td>{{ credit.customer_name }}</td>
+     <td>{{ credit.NIN }}</td>
+     <td>{{ credit.contact }}</td>
+    <td>{{ credit.credit_amount }}</td>
+     <td>{{ credit.expiry_date }}</td>
+    <td>{{ creit.balance }}</td>
+    <td>
+      <a href="{% url 'deposit_edit'  %}">Edit</a> |
+      <a href="{% url 'deposit_delete'  %}">delete</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
