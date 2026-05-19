@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Header -->
+<div class="card mb-3" style="border:none; border-top:5px solid #64B5F6;">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Supply Reports</h5>
+        <a href="{% url 'suppliers' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-3 fw-bold text-primary">{{ total_suppliers }}</div>
+                <div class="text-muted small">Total Suppliers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-3 fw-bold text-success">{{ paid }}</div>
+                <div class="text-muted small">Fully Paid</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-3 fw-bold text-warning">{{ partial }}</div>
+                <div class="text-muted small">Partial</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="fs-3 fw-bold text-danger">{{ pending }}</div>
+                <div class="text-muted small">Pending</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Total Order Value</div>
+                <div class="fs-5 fw-bold">UGX {{ total_cost }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Total Paid</div>
+                <div class="fs-5 fw-bold text-success">UGX {{ total_paid }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Total Outstanding</div>
+                <div class="fs-5 fw-bold text-danger">UGX {{ total_owed }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Supplier Breakdown Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h6 class="text-muted mb-3"><i class="bi bi-table me-1"></i>Supplier Breakdown</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover mb-0">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Company</th>
+                        <th>Product</th>
+                        <th>Total Cost</th>
+                        <th>Paid</th>
+                        <th>Owed</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in suppliers %}
+                    <tr>
+                        <td>{{ s.supplier_company }}</td>
+                        <td>{{ s.get_product_display }}{% if s.specification %} — {{ s.get_specification_display }}{% endif %}</td>
+                        <td>{{ s.total_cost }}</td>
+                        <td>{{ s.total_paid }}</td>
+                        <td>{{ s.amount_owed }}</td>
+                        <td style="min-width:100px;">
+                            <div class="progress" style="height:14px;">
+                                <div class="progress-bar
+                                    {% if s.payment_status == 'Paid' %}bg-success
+                                    {% elif s.payment_status == 'Partial' %}bg-warning
+                                    {% else %}bg-danger{% endif %}"
+                                    style="width:{% if s.payment_percent == 0 %}5{% else %}{{ s.payment_percent }}{% endif %}%;font-size:0.7rem;">
+                                    {{ s.payment_percent }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if s.payment_status == 'Paid' %}
+                            <span class="badge bg-success">Paid</span>
+                            {% elif s.payment_status == 'Partial' %}
+                            <span class="badge bg-warning text-dark">Partial</span>
+                            {% else %}
+                            <span class="badge bg-danger">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted">No supplier records.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

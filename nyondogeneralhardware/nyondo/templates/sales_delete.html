@@ -7,16 +7,16 @@
     <div class="alert alert-warning" role="alert">
         <strong>Are you sure?</strong> You are about to delete the record:
         <ul>
-            <li><strong>Item:</strong> {{ record.item_name }}</li>
-            <li><strong>Quantity:</strong> {{ record.quantity }}</li>
-            <li><strong>Price:</strong> {{ record.price }}</li>
-            <li><strong>Date:</strong> {{ record.date }}</li>
+            <li><strong>Product:</strong> {{ sale.product_sold }}</li>
+            <li><strong>Quantity:</strong> {{ sale.quantity_sold }}</li>
+            <li><strong>Receipt No:</strong> {{ sale.receipt_number }}</li>
+            <li><strong>Payment:</strong> {{ sale.payment_method }}</li>
         </ul>
         This action cannot be undone.
     </div>
 
     <!-- Delete form -->
-    <form method="POST" action="/">
+    <form method="POST" action="{% url 'sales_delete' sale.pk %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">
             <i class="bi bi-trash-fill"></i> Confirm Delete

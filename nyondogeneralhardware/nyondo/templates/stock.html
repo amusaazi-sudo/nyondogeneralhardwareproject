@@ -12,7 +12,9 @@
         <th>Quantity</th>
         <th>Buying Price</th>
         <th>Selling Price</th>
+        <th>Date</th>
         <th>Status</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -25,6 +27,13 @@
           <td>{{ stock.quantity }}</td>
           <td>{{ stock.buying_price }}</td>
           <td>{{ stock.selling_price }}</td>
+          <td>{{ stock.date|date:'Y-m-d' }}</td>
+           <td>
+            {% if stock.quantity > 0 %}
+              <span class="badge bg-success">In Stock</span>
+            {% else %}
+              <span class="badge bg-danger">Out of Stock</span>
+            {% endif %}
           <td>
             <a href="{% url 'stock_edit' stock.id %}" class="btn btn-sm btn-warning" style="text-decoration: none;">Edit</a>
             <a href="{% url 'stock_delete' stock.id %}" class="btn btn-sm btn-danger" style="text-decoration: none;">Delete</a>
@@ -32,8 +41,9 @@
         </tr>
         {% endfor %}
       {% else %}
+      
         <tr>
-          <td colspan="6" class="text-center text-muted">No stock recorded yet.</td>
+          <td colspan="6" class="text-center text-muted">stock recorded .</td>
         </tr>
       {% endif %}
     </tbody>

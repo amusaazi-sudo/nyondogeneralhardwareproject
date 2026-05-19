@@ -1,6 +1,38 @@
-from django.shortcuts import render, redirect,get_object_or_404
-from .models import  Stock, Sale
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.utils import timezone
+from .models import Stock, Sale, Receipt, Supplier, SupplierPayment
+from datetime import date as date_type
 # create your views here
+
+ALLOWED_ROLES = {'sales_manager', 'stock_manager', 'admin'}
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         username = request.POST.get('username', '').strip()
+#         password = request.POST.get('password', '').strip()
+
+#         if not username or not password:
+#             messages.error(request, 'Both username and password are required.')
+#             return render(request, 'login.html')
+
+#         user = authenticate(request, username=username, password=password)
+#         if user is None:
+#             messages.error(request, 'Invalid username or password.')
+#             return render(request, 'login.html')
+
+#         user_groups = set(user.groups.values_list('name', flat=True))
+#         if not user_groups.intersection(ALLOWED_ROLES) and not user.is_superuser:
+#             messages.error(request, 'You are not authorised to access this system.')
+#             return render(request, 'login.html')
+
+#         login(request, user)
+#         return redirect('dashboard')
+
+#     return render(request, 'login.html')
+
+
 #STOCK VIEWS
 def stocks (request):
     all_stock = Stock.objects.all()
@@ -13,24 +45,71 @@ def add_stock (request):
     if request.method == "POST":
         body = request.POST
         sent_product_name = body.get('product_name')
+        sent_specification = body.get('specification', '').strip()
         sent_product_code = body.get('product_code')
         sent_category = body.get('category')
         sent_quantity = body.get('quantity')
         sent_buying_price = body.get('buying_price')
         sent_selling_price = body.get('selling_price')
-        print(sent_selling_price)
+        sent_date = body.get('date')
+
+        # collect all validation errors before saving
+        errors = []
+        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
+        if sent_product_name in SPEC_REQUIRED and not sent_specification:
+            errors.append('Please select a specification for the chosen product.')
+
+        # validate quantity is a whole positive number
+        try:
+            sent_quantity = int(sent_quantity)
+            if sent_quantity < 0:
+                errors.append('Quantity must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Quantity must be a valid whole number.')
+
+        # validate buying price is a positive number
+        try:
+            sent_buying_price = int(sent_buying_price)
+            if sent_buying_price < 0:
+                errors.append('Buying price must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Buying price must be a valid number.')
+
+        # validate selling price is a positive number
+        try:
+            sent_selling_price = int(sent_selling_price)
+            if sent_selling_price < 0:
+                errors.append('Selling price must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Selling price must be a valid number.')
+
+        # validate date is not in the future
+        try:
+            from datetime import date as date_type
+            parsed_date = date_type.fromisoformat(sent_date)
+            if parsed_date > timezone.now().date():
+                errors.append('Date cannot be in the future.')
+        except (ValueError, TypeError):
+            errors.append('Please enter a valid date.')
+
+        # if any errors exist, show them and re-render the form with the user's input
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'stock_reg.html', {'data': body})
 
         new_stock = Stock()
-
         new_stock.product_name = sent_product_name
+        new_stock.specification = sent_specification or None
         new_stock.product_code = sent_product_code
         new_stock.category = sent_category
         new_stock.quantity = sent_quantity
         new_stock.buying_price = sent_buying_price
         new_stock.selling_price = sent_selling_price
-
+        new_stock.date = parsed_date
         new_stock.save()
 
+        messages.success(request, 'Stock added successfully.')
         return redirect('stocks')
     return render(request, 'stock_reg.html')
 
@@ -38,12 +117,42 @@ def stock_edit(request, pk):
     stock = get_object_or_404(Stock, pk=pk)
     if request.method == "POST":
         body = request.POST
+        errors = []
+
+        sent_date = body.get('date')
+        # validate date is not in the future and not before the original record date
+        try:
+            from datetime import date as date_type
+            parsed_date = date_type.fromisoformat(sent_date)
+            if parsed_date > timezone.now().date():
+                errors.append('Date cannot be in the future.')
+            if parsed_date < stock.date:
+                errors.append('Date cannot be earlier than the original record date.')
+        except (ValueError, TypeError):
+            errors.append('Please enter a valid date.')
+
+        # if date is invalid, show errors and re-render the edit form
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'stock_edit.html', {'stock': stock})
+
+        sent_specification = body.get('specification', '').strip()
+        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
+        if body.get('product_name') in SPEC_REQUIRED and not sent_specification:
+            errors.append('Please select a specification for the chosen product.')
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'stock_edit.html', {'stock': stock})
         stock.product_name = body.get('product_name')
+        stock.specification = sent_specification or None
         stock.product_code = body.get('product_code')
         stock.category = body.get('category')
         stock.quantity = body.get('quantity')
         stock.buying_price = body.get('buying_price')
         stock.selling_price = body.get('selling_price')
+        stock.date = parsed_date
         stock.save()
         return redirect('stocks')
     return render(request, 'stock_edit.html', {"stock": stock})
@@ -56,7 +165,15 @@ def stock_delete(request, pk):
     return render(request, 'stock_delete.html', {"stock": stock})
 
 
-#SALES VIEWS
+
+
+
+
+
+
+# SALES VIEWS
+
+# Shows all sales records
 def sales(request):
     sales = Sale.objects.all()
     context = {
@@ -65,36 +182,88 @@ def sales(request):
     return render(request, 'sales.html', context)
 
 
-def add_sales (request):
+# Saves a new sale, deducts from stock automatically, then auto-creates its receipt
+def add_sales(request):
     if request.method == "POST":
         payload = request.POST
         sent_product_sold = payload.get('product_sold')
-        sent_date = payload.get('date') 
-        sent_quantity_sold = payload.get('quantity_sold')
-        sent_receipt_number = payload.get('receipt_number')
+        sent_specification = payload.get('specification', '').strip()
         sent_payment_method = payload.get('payment_method')
 
-        new_sale = Sale()
+        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
+        errors = []
 
-        new_sale.product_sold = sent_product_sold
-        new_sale.date = sent_date
-        new_sale.quantity_sold = sent_quantity_sold
-        new_sale.receipt_number = sent_receipt_number
-        new_sale.payment_method = sent_payment_method
+        # validate specification is provided for products that require it
+        if sent_product_sold in SPEC_REQUIRED and not sent_specification:
+            errors.append('Please select a specification for the chosen product.')
 
+        # validate quantity is a positive whole number
+        try:
+            sent_quantity_sold = int(payload.get('quantity_sold'))
+            if sent_quantity_sold <= 0:
+                errors.append('Quantity must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Quantity must be a valid whole number.')
+            sent_quantity_sold = None
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'sales_reg.html', {'data': payload})
+
+        # find the matching stock item by product name and specification
+        stock = Stock.objects.filter(
+            product_name=sent_product_sold,
+            specification=sent_specification or None
+        ).first()
+
+        # block the sale if no matching stock record exists
+        if not stock:
+            messages.error(request, 'No stock record found for this product and specification.')
+            return render(request, 'sales_reg.html', {'data': payload})
+
+        # block the sale if there is not enough stock available
+        if stock.quantity < sent_quantity_sold:
+            messages.error(request, f'Not enough stock. Only {stock.quantity} unit(s) available.')
+            return render(request, 'sales_reg.html', {'data': payload})
+
+        # deduct the sold quantity from stock
+        stock.quantity -= sent_quantity_sold
+        stock.save()
+
+        # save the sale record
+        new_sale = Sale(
+            product_sold=sent_product_sold,
+            specification=sent_specification or None,
+            quantity_sold=sent_quantity_sold,
+            payment_method=sent_payment_method,
+        )
         new_sale.save()
 
-        return redirect('/sales/')
+        # auto-create the receipt linked to this sale
+        Receipt.objects.create(sale=new_sale)
+        return redirect('sales')
     return render(request, 'sales_reg.html')
 
+
+# Edits an existing sale (receipt stays linked, no changes needed there)
 def sales_edit(request, pk):
     sale = get_object_or_404(Sale, pk=pk)
     if request.method == "POST":
         payload = request.POST
-        sale.product_sold = payload.get('product_sold')
-        sale.date = payload.get('date')
+        sent_product_sold = payload.get('product_sold')
+        sent_specification = payload.get('specification', '').strip()
+        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
+        errors = []
+        if sent_product_sold in SPEC_REQUIRED and not sent_specification:
+            errors.append('Please select a specification for the chosen product.')
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'sales_edit.html', {'sale': sale})
+        sale.product_sold = sent_product_sold
+        sale.specification = sent_specification or None
         sale.quantity_sold = payload.get('quantity_sold')
-        sale.receipt_number = payload.get('receipt_number')
         sale.payment_method = payload.get('payment_method')
         sale.save()
         return redirect('sales')
@@ -113,9 +282,7 @@ def dashboard(request):
     # Collect summary data from your models
     sales_count = Sale.objects.count() or 0
     stock_count = Stock.objects.count()
-    # transport_count = Transport.objects.count()
-    # credit_count = CreditScheme.objects.count()
-
+   
     # Example: recent activities (last 5 records)
     recent_sales = Sale.objects.order_by('-date')[:5]
 
@@ -128,108 +295,254 @@ def dashboard(request):
     }
     return render(request, "dashboard.html", context)
 
+# Shows all auto-generated receipts, newest first
+def sales_receipt(request):
+    receipts = Receipt.objects.select_related('sale').order_by('-issued_on')  # select_related avoids extra DB queries
+    return render(request, 'sales_receipt.html', {'receipts': receipts})
+
+
+# Sales dashboard — passes real sale + receipt data to the template
 def sales_dashboard(request):
-    return render(request, 'sales_dashboard.html')
+    sales = Sale.objects.prefetch_related('receipt').order_by('-date')  # prefetch_related loads receipts efficiently
+    return render(request, 'sales_dashboard.html', {'sales': sales})
 
 def stock_dashboard(request):
     stocks = Stock.objects.all()
+    low_stock_items = stocks.filter(quantity__gt=0, quantity__lte=10)
+    out_of_stock_items = stocks.filter(quantity=0)
     context = {
         'stocks': stocks,
         'total_items': stocks.count(),
-        'low_stock': stocks.filter(quantity__gt=0, quantity__lte=10).count(),
-        'out_of_stock': stocks.filter(quantity=0).count(),
+        'low_stock': low_stock_items.count(),
+        'out_of_stock': out_of_stock_items.count(),
         'category_count': stocks.values('category').distinct().count(),
+        'low_stock_items': low_stock_items,
+        'out_of_stock_items': out_of_stock_items,
     }
     return render(request, 'stock_dashboard.html', context)
-        
-# def deposit_create(request):
-#     """Create a new deposit receipt"""
-#     if request.method == 'POST':
-#         # Create new deposit from form data
-#         deposit = Deposit(
-#             receipt_number=request.POST.get('receipt_number'),
-#             date=request.POST.get('date'),
-#             customer_name=request.POST.get('customer_name'),
-#             NIN=request.POST.get('NIN'),
-#             contact=request.POST.get('contact'),
-#             signature=request.POST.get('signature'),
-#             deposit_amount=request.POST.get('deposit_amount'),
-#             expiry_date=request.POST.get('expiry_date'),
-#             total_balance=request.POST.get('total_balance')
-#         )
-#         deposit.save()
-#         messages.success(request, 'Deposit saved successfully!')
-#         return redirect('deposit_list')
-    
-#     return render(request, 'deposit_form.html')
-
-# def deposit_list(request):
-#     """Display all deposits"""
-#     deposits = Deposit.objects.all()
-#     return render(request, 'deposit_list.html', {'deposits': deposits})
-
-# def deposit_edit(request, pk):
-#     """Edit a deposit"""
-#     deposit = get_object_or_404(Deposit, pk=pk)
-    
-#     if request.method == 'POST':
-#         # Update the deposit with new values
-#         deposit.receipt_number = request.POST.get('receipt_number')
-#         deposit.date = request.POST.get('date')
-#         deposit.customer_name = request.POST.get('customer_name')
-#         deposit.NIN = request.POST.get('NIN')
-#         deposit.contact = request.POST.get('contact')
-#         deposit.signature = request.POST.get('signature')
-#         deposit.deposit_amount = request.POST.get('deposit_amount')
-#         deposit.expiry_date = request.POST.get('expiry_date')
-#         deposit.total_balance = request.POST.get('total_balance')
-#         deposit.save()
-#         messages.success(request, 'Deposit updated successfully!')
-#         return redirect('deposit_list')
-    
-#     return render(request, 'deposit_edit.html', {'deposit': deposit})
-
-# def deposit_delete(request, pk):
-#     """Delete a deposit"""
-#     deposit = get_object_or_404(Deposit, pk=pk)
-    
-#     if request.method == 'POST':
-#         deposit.delete()
-#         messages.success(request, 'Deposit deleted successfully!')
-#         return redirect('deposit_list')
-    
-#     return render(request, 'deposit_confirm_delete.html', {'deposit': deposit})
 
 
+# SUPPLIER VIEWS
+
+def supply_reports(request):
+    from django.db.models import Sum, Count
+    suppliers = Supplier.objects.all()
+    total_suppliers = suppliers.count()
+    paid = suppliers.filter(payment_status='Paid').count()
+    partial = suppliers.filter(payment_status='Partial').count()
+    pending = suppliers.filter(payment_status='Pending').count()
+    total_cost = sum(s.total_cost for s in suppliers)
+    total_paid = sum(s.total_paid for s in suppliers)
+    total_owed = total_cost - total_paid
+    return render(request, 'supply_reports.html', {
+        'suppliers': suppliers,
+        'total_suppliers': total_suppliers,
+        'paid': paid,
+        'partial': partial,
+        'pending': pending,
+        'total_cost': total_cost,
+        'total_paid': total_paid,
+        'total_owed': total_owed,
+    })
+
+def suppliers(request):
+    all_suppliers = Supplier.objects.all()
+    return render(request, 'supplier.html', {'suppliers': all_suppliers})
 
 
-# fssuming you have a Credit model
+def add_supplier(request):
+    if request.method == 'POST':
+        body = request.POST
+        errors = []
 
-# def credit_view(request):
-#     if request.method == 'POST':
-#         # Get form data
-#         receipt_number = request.POST.get('receipt_number')
-#         date = request.POST.get('date')
-#         customer_name = request.POST.get('customer_name')
-#         nin = request.POST.get('nin')
-#         contact = request.POST.get('contact')
-#         credit_amount = request.POST.get('credit_amount')
-#         expiry_date = request.POST.get('expiry_date')
-#         balance = request.POST.get('balance')
-        
-#         # Save to database
-#         credit = Credit.objects.create(
-#             receipt_number=receipt_number,
-#             date=date,
-#             customer_name=customer_name,
-#             nin=nin,
-#             contact=contact,
-#             credit_amount=credit_amount,
-#             expiry_date=expiry_date,
-#             balance=balance
-#         )
-        
-#         messages.success(request, 'Credit saved successfully!')
-#         return redirect('credit')  # Redirect to clear form or show success
-    
-#     return render(request, 'credit.html')
+        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
+        if body.get('product') in SPEC_REQUIRED and not body.get('specification', '').strip():
+            errors.append('Please select a specification for the chosen product.')
+
+        try:
+            qty = int(body.get('quantity'))
+            if qty < 0:
+                errors.append('Quantity must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Quantity must be a valid whole number.')
+            qty = None
+
+        try:
+            deposit = int(body.get('deposit', 0))
+            if deposit < 0:
+                errors.append('Deposit must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Deposit must be a valid whole number.')
+            deposit = None
+
+        try:
+            amount_owed = int(body.get('amount_owed') or 0)
+            if amount_owed < 0:
+                errors.append('Amount owed must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Amount owed must be a valid whole number.')
+            amount_owed = 0
+
+        try:
+            delivery_date = date_type.fromisoformat(body.get('delivery_date'))
+        except (ValueError, TypeError):
+            errors.append('Please enter a valid delivery date.')
+            delivery_date = None
+
+        due_date = None
+        if body.get('due_date'):
+            try:
+                due_date = date_type.fromisoformat(body.get('due_date'))
+            except (ValueError, TypeError):
+                errors.append('Please enter a valid due date.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'supplier_reg.html', {'data': body})
+
+        Supplier.objects.create(
+            supplier_company=body.get('supplier_company'),
+            name=body.get('name'),
+            phone=body.get('phone'),
+            email=body.get('email') or None,
+            address=body.get('address') or None,
+            product=body.get('product'),
+            specification=body.get('specification', '').strip() or None,
+            quantity=qty,
+            deposit=deposit,
+            selling_price=None,
+            delivery_date=delivery_date,
+            is_credit=bool(body.get('is_credit')),
+            amount_owed=amount_owed,
+            payment_status=body.get('payment_status', 'Pending'),
+            due_date=due_date,
+        )
+        messages.success(request, 'Supplier added successfully.')
+        return redirect('suppliers')
+    return render(request, 'supplier_reg.html')
+
+
+def supplier_edit(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    if request.method == 'POST':
+        body = request.POST
+        errors = []
+
+        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
+        if body.get('product') in SPEC_REQUIRED and not body.get('specification', '').strip():
+            errors.append('Please select a specification for the chosen product.')
+
+        try:
+            qty = int(body.get('quantity'))
+            if qty < 0:
+                errors.append('Quantity must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Quantity must be a valid whole number.')
+            qty = None
+
+        try:
+            deposit = int(body.get('deposit', 0))
+            if deposit < 0:
+                errors.append('Deposit must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Deposit must be a valid whole number.')
+            deposit = None
+
+        try:
+            amount_owed = int(body.get('amount_owed') or 0)
+            if amount_owed < 0:
+                errors.append('Amount owed must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Amount owed must be a valid whole number.')
+            amount_owed = 0
+
+        try:
+            delivery_date = date_type.fromisoformat(body.get('delivery_date'))
+        except (ValueError, TypeError):
+            errors.append('Please enter a valid delivery date.')
+            delivery_date = None
+
+        due_date = None
+        if body.get('due_date'):
+            try:
+                due_date = date_type.fromisoformat(body.get('due_date'))
+            except (ValueError, TypeError):
+                errors.append('Please enter a valid due date.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'supplier_reg.html', {'data': body, 'supplier': supplier})
+
+        supplier.supplier_company = body.get('supplier_company')
+        supplier.name = body.get('name')
+        supplier.phone = body.get('phone')
+        supplier.email = body.get('email') or None
+        supplier.address = body.get('address') or None
+        supplier.product = body.get('product')
+        supplier.specification = body.get('specification', '').strip() or None
+        supplier.quantity = qty
+        supplier.deposit = deposit
+        supplier.delivery_date = delivery_date
+        supplier.is_credit = bool(body.get('is_credit'))
+        supplier.amount_owed = amount_owed
+        supplier.payment_status = body.get('payment_status', 'Pending')
+        supplier.due_date = due_date
+        supplier.save()
+        messages.success(request, 'Supplier updated successfully.')
+        return redirect('suppliers')
+    return render(request, 'supplier_reg.html', {'data': supplier.__dict__, 'supplier': supplier})
+
+
+def supplier_delete(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    if request.method == 'POST':
+        supplier.delete()
+        return redirect('suppliers')
+    return render(request, 'supplier_delete.html', {'supplier': supplier})
+
+
+def supplier_view(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    payments = supplier.payments.order_by('-date')
+
+    if request.method == 'POST':
+        errors = []
+        try:
+            amount = int(request.POST.get('amount', '0'))
+            if amount <= 0:
+                errors.append('Payment amount must be greater than zero.')
+        except (ValueError, TypeError):
+            errors.append('Enter a valid whole number for the amount.')
+            amount = 0
+
+        remaining = supplier.total_cost - supplier.total_paid
+        if not errors and amount > remaining:
+            errors.append(f'Amount exceeds remaining balance of UGX {remaining}.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            SupplierPayment.objects.create(
+                supplier=supplier,
+                amount=amount,
+                note=request.POST.get('note', '').strip(),
+            )
+            new_paid = supplier.total_paid  # recalculated after save
+            if new_paid >= supplier.total_cost:
+                supplier.payment_status = 'Paid'
+                supplier.amount_owed = 0
+            else:
+                supplier.payment_status = 'Partial'
+                supplier.amount_owed = supplier.total_cost - new_paid
+            supplier.save()
+            messages.success(request, 'Payment recorded successfully.')
+            return redirect('supplier_view', pk=pk)
+
+    return render(request, 'supply_credit_track.html', {
+        'supplier': supplier,
+        'payments': payments,
+    })
+

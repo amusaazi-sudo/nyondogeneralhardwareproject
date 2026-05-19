@@ -1,17 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+    .summary-card { transition: background-color 0.2s ease; }
+    .summary-card:hover { background-color: #FFFDD0 !important; }
+</style>
+
 <div class="container-fluid">
     <!-- Dashboard Header with Add Sale Button -->
-    <div class="card mb-4" style="background-color: #000000; border: none; border-top: 5px solid #64B5F6;">
+    <div class="card summary-card mb-4" style="border: none; border-top: 5px solid #64B5F6;">
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <h2 class="text-white mb-0">
-                        <i class="bi bi-speedometer2"></i> Dashboard
+                    <h2 class="text-black mb-0">
+                        <i class="bi bi-speedometer2"></i>Sales Dashboard
                     </h2>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="{% url 'add_sales' %}" class="btn btn-primary">
+                    <a href="{% url 'add_sales' %}" class="btn" style="background-color: #64B5F6; border-color: #64B5F6; color: #000;">
                         <i class="bi bi-plus-circle"></i> Add Sale
                     </a>
                 </div>
@@ -19,36 +24,48 @@
         </div>
     </div>
 
+    <!-- Quick Actions Bar -->
+    <div class="card summary-card mb-4 d-flex flex-row align-items-center justify-content-between px-4 py-3" style="border: none; border-top: 4px solid #64B5F6;">
+        <span class="text-black fw-semibold"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick Actions</span>
+        <div class="d-flex gap-3">
+            <a href="{% url 'sales_receipt' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-receipt"></i> Generate Receipt
+            </a>
+            <a href="{% url 'sales' %}" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-table"></i> Sales Records
+            </a>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-3">
-            <div class="card mb-3" style="background-color: plum; border: none; border-top: 4px solid #64B5F6;">
+            <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #64B5F6;">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Today's Sales</h5>
-                    <h4 class="text-white">UGX 102,500</h4>
+                    <h5 class="card-title text-black">Today's Sales</h5>
+                    <h4 class="text-black">UGX 102,500</h4>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card mb-3" style="background-color: peru; border: none; border-top: 4px solid #64B5F6;">
+            <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #64B5F6;">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Weekly Sales</h5>
-                    <h4 class="text-white">UGX 7,000,000</h4>
+                    <h5 class="card-title text-black">Weekly Sales</h5>
+                    <h4 class="text-black">UGX 7,000,000</h4>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card mb-3"
-                style="background-color: palevioletred; border: none; border-top: 4px solid #64B5F6;">
+            <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #64B5F6;">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Monthly Sales</h5>
-                    <h4 class="text-white">UGX 30,000,000</h4>
+                    <h5 class="card-title text-black">Monthly Sales</h5>
+                    <h4 class="text-black">UGX 30,000,000</h4>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card mt-4" style="background-color: #000000; border: none; border-top: 5px solid #64B5F6;">
-        <div class="card-header bg-transparent" style="border-bottom: 1px solid #333;">
+        <div class="card-header" style="background-color: #000 !important; border-bottom: 1px solid #333;">
             <span class="text-white">Recent Sales</span>
         </div>
         <div class="card-body">
@@ -60,28 +77,28 @@
                         <th>Quantity</th>
                         <th>Receipt Number</th>
                         <th>Payment Method</th>
+                        <th>Alerts</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for sale in sales %}
                     <tr>
-                        <td class="text-white">Cement</td>
-                        <td class="text-white">2026-05-07</td>
-                        <td class="text-white">50</td>
-                        <td class="text-white">001</td>
-                        <td class="text-white">cash</td>
-                        <td class="text-white"></td>
+                        <td class="text-white">{{ sale.product_sold }}</td>
+                        <td class="text-white">{{ sale.date }}</td>
+                        <td class="text-white">{{ sale.quantity_sold }}</td>
+                        <!-- receipt_number comes from the auto-generated Receipt linked to this sale -->
+                        <td class="text-white">{{ sale.receipt.receipt_number|default:"—" }}</td>
+                        <td class="text-white">{{ sale.payment_method }}</td>
+                        <td><span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Completed</span></td>
+                        <td>
+                            <a href="{% url 'sales_edit' sale.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'sales_delete' sale.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        </td>
                     </tr>
-                    <tr>
-                        <td class="text-white">Cement</td>
-                        <td class="text-white">2026-05-07</td>
-                        <td class="text-white">50</td>
-                        <td class="text-white">002</td>
-                        <td class="text-white">cash</td>
-                        <td class="text-white"></td>
-
-
-                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-white text-center">No sales recorded yet.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

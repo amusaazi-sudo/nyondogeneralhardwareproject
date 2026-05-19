@@ -2,20 +2,27 @@
 {% block content %}
 <div class="container-fluid">
     <!-- Header with Back Button -->
-    <div class="card mb-4" style="background-color: #000000; border: none; border-top: 5px solid #64B5F6;">
+    <div class="card mb-4" style="border: none; border-top: 5px solid #64B5F6;">
         <div class="card-body">
             <div class="row align-items-center">
                 <div class="col-md-6">
-                    <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-sm mb-2" style="text-decoration: none;">← Back to Dashboard</a>
-                    <h2 class="text-white mb-0">
+                    <h2 class="text-black mb-0">
                         <i class="bi bi-box-seam"></i> Stock Dashboard
                     </h2>
                 </div>
-                <div class="col-md-6 text-end">
-                    <a href="{% url 'add_stock' %}" class="btn btn-primary" style="text-decoration: none;">
-                        <i class="bi bi-plus-circle"></i> Add Stock
-                    </a>
-                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access -->
+    <div class="card mb-4" style="border: none; border-top: 4px solid #64B5F6;">
+        <div class="card-body">
+            <h6 class="text-muted mb-3"><i class="bi bi-lightning-charge"></i> Quick Access</h6>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'stocks' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil-square"></i> Edit / Delete Stock</a>
+                <a href="{% url 'stocks' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-table"></i> Stock Records</a>
+                <a href="{% url 'add_stock' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-plus-circle"></i> Add New Stock</a>
             </div>
         </div>
     </div>
@@ -23,50 +30,94 @@
     <!-- Stock Summary Cards -->
     <div class="row">
         <div class="col-md-3">
-            <div class="card mb-3"
-                style="background-color: plum; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
+            <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Total Items</h5>
-                    <h3 class="text-white">{{ total_items }}</h3>
-                    <small class="text-white-50">In stock</small>
+                    <h5 class="card-title text-black">Total Items</h5>
+                    <h3 class="text-black">{{ total_items }}</h3>
+                    <small class="text-muted">In stock</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card mb-3"
-                style="background-color: peru; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
+            <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #ffc107; min-height: 120px; cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#lowStockList">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Low Stock</h5>
+                    <h5 class="card-title text-black">Low Stock</h5>
                     <h3 class="text-warning">{{ low_stock }}</h3>
-                    <small class="text-white-50">Need reorder</small>
+                    <small class="text-muted">Need reorder <i class="bi bi-chevron-down"></i></small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card mb-3"
-                style="background-color: palevioletred; border: none; border-top: 4px solid #64B5F6; min-height: 120px;">
+            <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #dc3545; min-height: 120px; cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#outOfStockList">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Out of Stock</h5>
+                    <h5 class="card-title text-black">Out of Stock</h5>
                     <h3 class="text-danger">{{ out_of_stock }}</h3>
-                    <small class="text-white-50">Unavailable</small>
+                    <small class="text-muted">Unavailable <i class="bi bi-chevron-down"></i></small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card mb-3"
-                style="background-color: pink; border: none; border-top: 3px solid #64B5F6; min-height: 120px;">
+            <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6; min-height: 120px;">
                 <div class="card-body">
-                    <h5 class="card-title text-white">Categories</h5>
-                    <h3 class="text-white">{{ category_count }}</h3>
-                    <small class="text-white-50">Product types</small>
+                    <h5 class="card-title text-black">Categories</h5>
+                    <h3 class="text-black">{{ category_count }}</h3>
+                    <small class="text-muted">Product types</small>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Items -->
+    <div class="collapse mb-3" id="lowStockList">
+        <div class="card" style="border: none; border-top: 4px solid #ffc107;">
+            <div class="card-header" style="background:#fff8e1;"><strong class="text-warning"><i class="bi bi-exclamation-triangle"></i> Low Stock Items</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="table-warning"><tr><th>Product</th><th>Specification</th><th>Qty</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for item in low_stock_items %}
+                        <tr>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.specification|default:"-" }}</td>
+                            <td><span class="badge bg-warning text-dark">{{ item.quantity }}</span></td>
+                            <td><a href="{% url 'stock_edit' item.pk %}" class="btn btn-sm btn-warning">Edit</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted">No low stock items.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Out of Stock Items -->
+    <div class="collapse mb-3" id="outOfStockList">
+        <div class="card" style="border: none; border-top: 4px solid #dc3545;">
+            <div class="card-header" style="background:#fff0f0;"><strong class="text-danger"><i class="bi bi-x-circle"></i> Out of Stock Items</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="table-danger"><tr><th>Product</th><th>Specification</th><th>Category</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for item in out_of_stock_items %}
+                        <tr>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.specification|default:"-" }}</td>
+                            <td>{{ item.category }}</td>
+                            <td><a href="{% url 'stock_edit' item.pk %}" class="btn btn-sm btn-danger">Restock</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted">No out of stock items.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- Stock Items Table -->
     <div class="card mt-4" style="background-color: #000000; border: none; border-top: 5px solid #64B5F6;">
-        <div class="card-header bg-transparent" style="border-bottom: 1px solid #333;">
+        <div class="card-header" style="background-color: #000 !important; border-bottom: 1px solid #333;">
             <span class="text-white"><i class="bi bi-list-check"></i> Current Stock Items</span>
         </div>
         <div class="card-body">
@@ -111,21 +162,13 @@
 </div>
 
 <style>
-    .card {
-        transition: transform 0.2s;
-    }
-    .card:hover {
-        transform: translateY(-5px);
-    }
+    .summary-card { transition: background-color 0.2s ease; }
+    .summary-card:hover { background-color: #FFFDD0 !important; }
     .table-dark {
         --bs-table-bg: #000000;
         --bs-table-striped-bg: #1a1a1a;
     }
-    a {
-        text-decoration: none;
-    }
-    a:not(.btn) {
-        color: inherit;
-    }
+    a { text-decoration: none; }
+    a:not(.btn) { color: inherit; }
 </style>
 {% endblock %}

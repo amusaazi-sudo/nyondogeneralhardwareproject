@@ -4,28 +4,22 @@
     <h2 class="mb-4"><i class="bi bi-pencil-square"></i> Edit Record</h2>
 
     <!-- Edit form -->
-    <form method="POST" action="edit">
+    <form method="POST" action="{% url 'sales_edit' sale.pk %}">
         {% csrf_token %}
         
-        <!-- Example fields -->
         <div class="mb-3">
-            <label for="itemName" class="form-label">Item Name</label>
-            <input type="text" class="form-control" id="itemName" name="item_name" value="{{ record.item_name }}" required>
+            <label class="form-label">Product Sold</label>
+            <input type="text" class="form-control" name="product_sold" value="{{ sale.product_sold }}" required>
         </div>
 
         <div class="mb-3">
-            <label for="quantity" class="form-label">Quantity</label>
-            <input type="number" class="form-control" id="quantity" name="quantity" value="{{ record.quantity }}" required>
+            <label class="form-label">Quantity Sold</label>
+            <input type="number" class="form-control" name="quantity_sold" value="{{ sale.quantity_sold }}" required>
         </div>
 
         <div class="mb-3">
-            <label for="price" class="form-label">Price</label>
-            <input type="text" class="form-control" id="price" name="price" value="{{ record.price }}" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="date" class="form-label">Date</label>
-            <input type="date" class="form-control" id="date" name="date" value="{{ record.date|date:'Y-m-d' }}" required>
+            <label class="form-label">Payment Method</label>
+            <input type="text" class="form-control" name="payment_method" value="{{ sale.payment_method }}" required>
         </div>
 
         <!-- Action buttons -->

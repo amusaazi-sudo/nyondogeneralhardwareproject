@@ -15,7 +15,7 @@
       </tr>
     </thead>
     <tbody>
-      <!-- {% if sales %} -->
+      {% if sales %}
       {% for sale in sales %}
       <tr>
         <td>{{ sale.product_sold }}</td>
@@ -24,16 +24,16 @@
         <td>{{ sale.receipt_number }}</td>
         <td>{{ sale.payment_method }}</td>
         <td>
-          <a href="#" class="btn btn-sm btn-warning">Edit</a>
-          <a href="#" class="btn btn-sm btn-danger">Delete</a>
+          <a href="{% url 'sales_edit' sale.id %}"><i class="bi bi-pencil"></i></a>  
+          <a href="{% url 'sales_delete' sale.id %}"><i class="bi bi-trash"></i></a>
         </td>
       </tr>
       {% endfor %}
-      <!-- {% else %} -->
+      {% else %}
       <tr>
-        <td colspan="6" class="text-center text-muted">No sales recorded yet.</td>
+        <td colspan="6" class="text-center text-muted"> sales records.</td>
       </tr>
-      <!-- {% endif %} -->
+      {% endif %}
     </tbody>
   </table>
 </div>

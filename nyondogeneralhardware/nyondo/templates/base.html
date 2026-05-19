@@ -26,8 +26,6 @@
         .wrapper {
             display: flex;
             flex: 1;
-            margin-top: 56px;
-            /* Offset for fixed navbar */
         }
 
         .sidebar {
@@ -35,7 +33,29 @@
             background: black;
             color: #fff;
             padding: 20px 10px;
-            min-height: calc(100vh - 56px);
+            min-height: 100vh;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+        }
+
+        .sidebar-brand i {
+            font-size: 1.8rem;
+            color: #64B5F6;
+        }
+
+        .sidebar-brand span {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.2;
+            color: #fff;
         }
 
         .sidebar a {
@@ -47,7 +67,8 @@
             margin-bottom: 8px;
         }
 
-        .sidebar a:hover {
+        .sidebar a:hover,
+        .sidebar a.active {
             background: #64B5F6;
         }
 
@@ -57,58 +78,35 @@
             background: #f8f9fa;
         }
 
-        footer {
-            margin-top: auto;
-            background-color: black
+        .card {
+            background-color: #fff !important;
         }
 
-        .navbar {
-            background-color: black
+        footer {
+            margin-top: auto;
+            background-color: black;
+            font-size: 0.75rem;
+            padding: 6px 0;
         }
+
+
     </style>
 </head>
 
 <body>
 
-    <nav class="navbar navbar-dark  fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#"> <i class="bi bi-tools"></i> NYONDO GENERAL HARDWARE</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas"
-                data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar"
-                aria-labelledby="offcanvasDarkNavbarLabel">
-                <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">WELCOME BACK!</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                        aria-label="Close"></button>
-                </div>
-                <div class="offcanvas-body">
-                    <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
-                        <p>Rate Our Services</p>
-                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                            class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                            class="fa-solid fa-star"></i>
-                    </ul>
-                    <form class="d-flex mt-3" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
-                        <button class="btn btn-success" type="submit">Search</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
-
     <div class="wrapper">
         <!-- Sidebar -->
         <div class="sidebar">
+            <div class="sidebar-brand">
+                <i class="bi bi-tools"></i>
+                <span>Nyondo General<br>Hardware</span>
+            </div>
             <h5>Menu</h5>
-            <a href="/nyondogeneralhardware/nyondo/templates/dashboard.html"><i class="bi bi-speedometer2"></i>
-                Dashboard</a>
-            <a href="{% url 'sales_dashboard' %}"><i class="bi bi-cart"></i> Sales</a>
-            <a href="{% url 'stock_dashboard'  %}"><i class="bi bi-box-seam"></i> Stock</a>
+            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+            <a href="{% url 'sales_dashboard' %}" class="{% if request.resolver_match.url_name == 'sales_dashboard' %}active{% endif %}"><i class="bi bi-cart"></i> Sales</a>
+            <a href="{% url 'stock_dashboard' %}" class="{% if request.resolver_match.url_name == 'stock_dashboard' %}active{% endif %}"><i class="bi bi-box-seam"></i> Stock</a>
+            <a href="{% url 'suppliers' %}" class="{% if 'supplier' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-people"></i> Suppliers</a>
             
 
 
@@ -120,7 +118,7 @@
         </div>
     </div>
 
-    <footer class=" text-white text-center py-3">
+    <footer class="text-white text-center py-1">
         <p>&copy; 2026 Nyondo General Hardware | By Aliyer Bakers</p>
     </footer>
 
