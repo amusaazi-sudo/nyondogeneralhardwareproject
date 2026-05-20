@@ -1,39 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
 
- <div class="card summary-card mb-4" style="border: none; border-top: 5px solid #64B5F6;">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h2 class="text-black mb-0">
-                        <i class="bi bi-people"></i> Customer Management
-                    </h2>
-                </div>
+<div class="card summary-card mb-4" style="border: none; border-top: 5px solid #64B5F6;">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="text-black mb-0">
+                    <i class="bi bi-people"></i> Customer Management
+                </h2>
             </div>
         </div>
     </div>
+</div>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Customers</h4>
-    <a href="{% url 'add_customer' %}" class="btn btn-style" style="background-color: #64B5F6; border-color: #64B5F6;">+ Register Customer</a>
+    <a href="{% url 'add_customer' %}" class="btn btn-style" style="background-color: #64B5F6; border-color: #64B5F6;">+
+        Register Customer</a>
 </div>
 <!-- QUICK ACCESS -->
-<div class="card summary-card mb-4 d-flex flex-row align-items-center justify-content-between px-4 py-3" style="border: none; border-top: 4px solid #64B5F6;">
-        <span class="text-black fw-semibold"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick Actions</span>
-        <div class="d-flex gap-3">
-            <a href="{% url 'sales_receipt' %}" class="btn btn-outline-info btn-sm">
-                <i class="bi bi-receipt"></i>Customer Records
-            </a>
-            
-        </div>
+<div class="card summary-card mb-4 d-flex flex-row align-items-center justify-content-between px-4 py-3"
+    style="border: none; border-top: 4px solid #64B5F6;">
+    <span class="text-black fw-semibold"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick
+        Actions</span>
+    <div class="d-flex gap-3">
+        <a href="{% url 'sales_receipt' %}" class="btn btn-outline-info btn-sm">
+            <i class="bi bi-receipt"></i>Customer Records
+        </a>
+
     </div>
+</div>
 {% if messages %}
-    {% for msg in messages %}
-        <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
-            {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    {% endfor %}
+{% for msg in messages %}
+<div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
 {% endif %}
 
 <div class="card shadow-sm">
@@ -74,7 +77,9 @@
                     </td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="8" class="text-center text-muted py-3">No customers registered yet.</td></tr>
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-3">No customers registered yet.</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

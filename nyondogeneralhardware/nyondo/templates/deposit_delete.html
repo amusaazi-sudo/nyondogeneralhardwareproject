@@ -14,11 +14,26 @@
                 </div>
                 <p>Are you sure you want to delete this deposit record?</p>
                 <table class="table table-sm">
-                    <tr><th>Receipt No:</th><td>{{ deposit.receipt_number }}</td></tr>
-                    <tr><th>Customer:</th><td>{{ deposit.customer.name }}</td></tr>
-                    <tr><th>Item:</th><td>{{ deposit.get_item_display }}</td></tr>
-                    <tr><th>Deposit Amount:</th><td>UGX {{ deposit.deposit_amount }}</td></tr>
-                    <tr><th>Date:</th><td>{{ deposit.date }}</td></tr>
+                    <tr>
+                        <th>Receipt No:</th>
+                        <td>{{ deposit.receipt_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>Customer:</th>
+                        <td>{{ deposit.customer.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Item:</th>
+                        <td>{{ deposit.get_item_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Deposit Amount:</th>
+                        <td>UGX {{ deposit.deposit_amount }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date:</th>
+                        <td>{{ deposit.date }}</td>
+                    </tr>
                 </table>
                 <form method="POST">
                     {% csrf_token %}

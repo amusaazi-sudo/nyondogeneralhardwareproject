@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 <link rel="stylesheet" href="/nyondogeneralhardware/nyondo/static/salesreg.css">
 <div class="container mt-4">
   <h2 class="mb-4">STOCK REGISTER FORM</h2>
 
   {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
   {% endfor %}
 
   <form method="post" class="row g-3">
@@ -18,13 +18,13 @@
       <label for="product_name" class="form-label">Product Name</label>
       <select id="product_name" class="form-select" name="product_name" required>
         <option value="" disabled selected>Choose product...</option>
-        <option value="cement"       {% if data.product_name == 'cement' %}selected{% endif %}>Cement</option>
-        <option value="iron_bars"    {% if data.product_name == 'iron_bars' %}selected{% endif %}>Iron Bars</option>
-        <option value="nails"        {% if data.product_name == 'nails' %}selected{% endif %}>Nails</option>
-        <option value="wheelbarrows" {% if data.product_name == 'wheelbarrows' %}selected{% endif %}>Wheelbarrows</option>
-        <option value="wire_mesh"    {% if data.product_name == 'wire_mesh' %}selected{% endif %}>Wire Mesh</option>
-        <option value="barbed_wire"  {% if data.product_name == 'barbed_wire' %}selected{% endif %}>Barbed Wire</option>
-        <option value="iron_sheets"  {% if data.product_name == 'iron_sheets' %}selected{% endif %}>Iron Sheets</option>
+        <option value="cement" {% if data.product_name=='cement' %}selected{% endif %}>Cement</option>
+        <option value="iron_bars" {% if data.product_name=='iron_bars' %}selected{% endif %}>Iron Bars</option>
+        <option value="nails" {% if data.product_name=='nails' %}selected{% endif %}>Nails</option>
+        <option value="wheelbarrows" {% if data.product_name=='wheelbarrows' %}selected{% endif %}>Wheelbarrows</option>
+        <option value="wire_mesh" {% if data.product_name=='wire_mesh' %}selected{% endif %}>Wire Mesh</option>
+        <option value="barbed_wire" {% if data.product_name=='barbed_wire' %}selected{% endif %}>Barbed Wire</option>
+        <option value="iron_sheets" {% if data.product_name=='iron_sheets' %}selected{% endif %}>Iron Sheets</option>
       </select>
     </div>
 
@@ -34,37 +34,54 @@
       <select id="specification" class="form-select" name="specification">
         <option value="" disabled selected>Choose specification...</option>
         {% if data.product_name == 'cement' %}
-          <option value="cem_iin"  {% if data.specification == 'cem_iin' %}selected{% endif %}>CEM IIN</option>
-          <option value="cem_iiin" {% if data.specification == 'cem_iiin' %}selected{% endif %}>CEM IIIN</option>
+        <option value="cem_iin" {% if data.specification=='cem_iin' %}selected{% endif %}>CEM IIN</option>
+        <option value="cem_iiin" {% if data.specification=='cem_iiin' %}selected{% endif %}>CEM IIIN</option>
         {% elif data.product_name == 'iron_bars' %}
-          <option value="10mm" {% if data.specification == '10mm' %}selected{% endif %}>10mm</option>
-          <option value="12mm" {% if data.specification == '12mm' %}selected{% endif %}>12mm</option>
-          <option value="16mm" {% if data.specification == '16mm' %}selected{% endif %}>16mm</option>
+        <option value="10mm" {% if data.specification=='10mm' %}selected{% endif %}>10mm</option>
+        <option value="12mm" {% if data.specification=='12mm' %}selected{% endif %}>12mm</option>
+        <option value="16mm" {% if data.specification=='16mm' %}selected{% endif %}>16mm</option>
         {% elif data.product_name == 'nails' %}
-          <option value="1inch"       {% if data.specification == '1inch' %}selected{% endif %}>1 inch</option>
-          <option value="3inch"       {% if data.specification == '3inch' %}selected{% endif %}>3 inch</option>
-          <option value="4inch"       {% if data.specification == '4inch' %}selected{% endif %}>4 inch</option>
-          <option value="5inch"       {% if data.specification == '5inch' %}selected{% endif %}>5 inch</option>
-          <option value="roofing_5kg" {% if data.specification == 'roofing_5kg' %}selected{% endif %}>Roofing Nails 5kg</option>
+        <option value="1inch" {% if data.specification=='1inch' %}selected{% endif %}>1 inch</option>
+        <option value="3inch" {% if data.specification=='3inch' %}selected{% endif %}>3 inch</option>
+        <option value="4inch" {% if data.specification=='4inch' %}selected{% endif %}>4 inch</option>
+        <option value="5inch" {% if data.specification=='5inch' %}selected{% endif %}>5 inch</option>
+        <option value="roofing_5kg" {% if data.specification=='roofing_5kg' %}selected{% endif %}>Roofing Nails 5kg
+        </option>
         {% elif data.product_name == 'barbed_wire' %}
-          <option value="high_tensile" {% if data.specification == 'high_tensile' %}selected{% endif %}>High Tensile</option>
-          <option value="low_tensile"  {% if data.specification == 'low_tensile' %}selected{% endif %}>Low Tensile</option>
+        <option value="high_tensile" {% if data.specification=='high_tensile' %}selected{% endif %}>High Tensile
+        </option>
+        <option value="low_tensile" {% if data.specification=='low_tensile' %}selected{% endif %}>Low Tensile</option>
         {% elif data.product_name == 'iron_sheets' %}
-          <option value="gauge_28_red"   {% if data.specification == 'gauge_28_red' %}selected{% endif %}>Gauge 28 - Red</option>
-          <option value="gauge_28_blue"  {% if data.specification == 'gauge_28_blue' %}selected{% endif %}>Gauge 28 - Blue</option>
-          <option value="gauge_28_green" {% if data.specification == 'gauge_28_green' %}selected{% endif %}>Gauge 28 - Green</option>
-          <option value="gauge_28_brown" {% if data.specification == 'gauge_28_brown' %}selected{% endif %}>Gauge 28 - Brown</option>
-          <option value="gauge_28_grey"  {% if data.specification == 'gauge_28_grey' %}selected{% endif %}>Gauge 28 - Grey</option>
-          <option value="gauge_30_red"   {% if data.specification == 'gauge_30_red' %}selected{% endif %}>Gauge 30 - Red</option>
-          <option value="gauge_30_blue"  {% if data.specification == 'gauge_30_blue' %}selected{% endif %}>Gauge 30 - Blue</option>
-          <option value="gauge_30_green" {% if data.specification == 'gauge_30_green' %}selected{% endif %}>Gauge 30 - Green</option>
-          <option value="gauge_30_brown" {% if data.specification == 'gauge_30_brown' %}selected{% endif %}>Gauge 30 - Brown</option>
-          <option value="gauge_30_grey"  {% if data.specification == 'gauge_30_grey' %}selected{% endif %}>Gauge 30 - Grey</option>
-          <option value="gauge_32_red"   {% if data.specification == 'gauge_32_red' %}selected{% endif %}>Gauge 32 - Red</option>
-          <option value="gauge_32_blue"  {% if data.specification == 'gauge_32_blue' %}selected{% endif %}>Gauge 32 - Blue</option>
-          <option value="gauge_32_green" {% if data.specification == 'gauge_32_green' %}selected{% endif %}>Gauge 32 - Green</option>
-          <option value="gauge_32_brown" {% if data.specification == 'gauge_32_brown' %}selected{% endif %}>Gauge 32 - Brown</option>
-          <option value="gauge_32_grey"  {% if data.specification == 'gauge_32_grey' %}selected{% endif %}>Gauge 32 - Grey</option>
+        <option value="gauge_28_red" {% if data.specification=='gauge_28_red' %}selected{% endif %}>Gauge 28 - Red
+        </option>
+        <option value="gauge_28_blue" {% if data.specification=='gauge_28_blue' %}selected{% endif %}>Gauge 28 - Blue
+        </option>
+        <option value="gauge_28_green" {% if data.specification=='gauge_28_green' %}selected{% endif %}>Gauge 28 - Green
+        </option>
+        <option value="gauge_28_brown" {% if data.specification=='gauge_28_brown' %}selected{% endif %}>Gauge 28 - Brown
+        </option>
+        <option value="gauge_28_grey" {% if data.specification=='gauge_28_grey' %}selected{% endif %}>Gauge 28 - Grey
+        </option>
+        <option value="gauge_30_red" {% if data.specification=='gauge_30_red' %}selected{% endif %}>Gauge 30 - Red
+        </option>
+        <option value="gauge_30_blue" {% if data.specification=='gauge_30_blue' %}selected{% endif %}>Gauge 30 - Blue
+        </option>
+        <option value="gauge_30_green" {% if data.specification=='gauge_30_green' %}selected{% endif %}>Gauge 30 - Green
+        </option>
+        <option value="gauge_30_brown" {% if data.specification=='gauge_30_brown' %}selected{% endif %}>Gauge 30 - Brown
+        </option>
+        <option value="gauge_30_grey" {% if data.specification=='gauge_30_grey' %}selected{% endif %}>Gauge 30 - Grey
+        </option>
+        <option value="gauge_32_red" {% if data.specification=='gauge_32_red' %}selected{% endif %}>Gauge 32 - Red
+        </option>
+        <option value="gauge_32_blue" {% if data.specification=='gauge_32_blue' %}selected{% endif %}>Gauge 32 - Blue
+        </option>
+        <option value="gauge_32_green" {% if data.specification=='gauge_32_green' %}selected{% endif %}>Gauge 32 - Green
+        </option>
+        <option value="gauge_32_brown" {% if data.specification=='gauge_32_brown' %}selected{% endif %}>Gauge 32 - Brown
+        </option>
+        <option value="gauge_32_grey" {% if data.specification=='gauge_32_grey' %}selected{% endif %}>Gauge 32 - Grey
+        </option>
         {% endif %}
       </select>
     </div>
@@ -72,7 +89,8 @@
     <!-- Product Code -->
     <div class="col-md-6">
       <label for="product_code" class="form-label">Product Code</label>
-      <input type="text" class="form-control" id="product_code" name="product_code" required value="{{ data.product_code|default:'' }}">
+      <input type="text" class="form-control" id="product_code" name="product_code" required
+        value="{{ data.product_code|default:'' }}">
     </div>
 
     <!-- Category -->
@@ -80,28 +98,31 @@
       <label for="category" class="form-label">Category</label>
       <select id="category" class="form-select" name="category" required>
         <option value="" disabled selected>Choose...</option>
-        <option value="plumbing"   {% if data.category == 'plumbing' %}selected{% endif %}>Plumbing</option>
-        <option value="electrical" {% if data.category == 'electrical' %}selected{% endif %}>Electrical</option>
-        <option value="building"   {% if data.category == 'building' %}selected{% endif %}>Building</option>
+        <option value="plumbing" {% if data.category=='plumbing' %}selected{% endif %}>Plumbing</option>
+        <option value="electrical" {% if data.category=='electrical' %}selected{% endif %}>Electrical</option>
+        <option value="building" {% if data.category=='building' %}selected{% endif %}>Building</option>
       </select>
     </div>
 
     <!-- Quantity -->
     <div class="col-md-6">
       <label for="quantity" class="form-label">Quantity</label>
-      <input type="number" class="form-control" id="quantity" name="quantity" required value="{{ data.quantity|default:'' }}">
+      <input type="number" class="form-control" id="quantity" name="quantity" required
+        value="{{ data.quantity|default:'' }}">
     </div>
 
     <!-- Buying Price -->
     <div class="col-md-6">
       <label for="buying_price" class="form-label">Buying Price</label>
-      <input type="number" class="form-control" id="buying_price" name="buying_price" required value="{{ data.buying_price|default:'' }}">
+      <input type="number" class="form-control" id="buying_price" name="buying_price" required
+        value="{{ data.buying_price|default:'' }}">
     </div>
 
     <!-- Selling Price -->
     <div class="col-md-6">
       <label for="selling_price" class="form-label">Selling Price</label>
-      <input type="number" class="form-control" id="selling_price" name="selling_price" required value="{{ data.selling_price|default:'' }}">
+      <input type="number" class="form-control" id="selling_price" name="selling_price" required
+        value="{{ data.selling_price|default:'' }}">
     </div>
 
     <!-- Date -->

@@ -7,12 +7,12 @@
 </div>
 
 {% if messages %}
-    {% for msg in messages %}
-        <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
-            {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    {% endfor %}
+{% for msg in messages %}
+<div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
 {% endif %}
 
 <div class="card shadow-sm" style="max-width: 650px;">
@@ -24,7 +24,8 @@
                     <label class="form-label fw-bold">Customer</label>
                     <select name="customer" class="form-select" required>
                         {% for c in customers %}
-                            <option value="{{ c.pk }}" {% if deposit.customer.pk == c.pk %}selected{% endif %}>{{ c.name }}</option>
+                        <option value="{{ c.pk }}" {% if deposit.customer.pk==c.pk %}selected{% endif %}>{{ c.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -32,7 +33,7 @@
                     <label class="form-label fw-bold">Item</label>
                     <select name="item" class="form-select" required>
                         {% for val, label in scheme_items %}
-                            <option value="{{ val }}" {% if deposit.item == val %}selected{% endif %}>{{ label }}</option>
+                        <option value="{{ val }}" {% if deposit.item==val %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -46,15 +47,18 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Deposit Amount (UGX)</label>
-                    <input type="number" name="deposit_amount" class="form-control" value="{{ deposit.deposit_amount }}" min="1" required>
+                    <input type="number" name="deposit_amount" class="form-control" value="{{ deposit.deposit_amount }}"
+                        min="1" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Total Balance (UGX)</label>
-                    <input type="number" name="total_balance" class="form-control" value="{{ deposit.total_balance }}" min="0" required>
+                    <input type="number" name="total_balance" class="form-control" value="{{ deposit.total_balance }}"
+                        min="0" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Expiry Date</label>
-                    <input type="date" name="expiry_date" class="form-control" value="{{ deposit.expiry_date|date:'Y-m-d' }}" required>
+                    <input type="date" name="expiry_date" class="form-control"
+                        value="{{ deposit.expiry_date|date:'Y-m-d' }}" required>
                 </div>
             </div>
             <div class="d-flex gap-2 mt-4">

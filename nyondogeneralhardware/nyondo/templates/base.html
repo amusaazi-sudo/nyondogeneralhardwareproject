@@ -87,8 +87,6 @@
             font-size: 0.75rem;
             padding: 6px 0;
         }
-
-
     </style>
 </head>
 
@@ -102,12 +100,24 @@
                 <span>Nyondo General<br>Hardware</span>
             </div>
             <h5>Menu</h5>
-            <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
-            <a href="{% url 'sales_dashboard' %}" class="{% if 'sale' in request.resolver_match.url_name or 'sales' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-cart"></i> Sales</a>
-            <a href="{% url 'stock_dashboard' %}" class="{% if 'stock' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-box-seam"></i> Stock</a>
-            <a href="{% url 'suppliers' %}" class="{% if 'supplier' in request.resolver_match.url_name or 'supply' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-people"></i> Suppliers</a>
-            <a href="{% url 'customer' %}" class="{% if 'customer' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-person-lines-fill"></i> Customers</a>
-            <a href="{% url 'deposits' %}" class="{% if 'deposit' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-cash-coin"></i> Deposits</a>
+            <a href="{% url 'dashboard' %}"
+                class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"><i
+                    class="bi bi-speedometer2"></i> Dashboard</a>
+            <a href="{% url 'sales_dashboard' %}"
+                class="{% if 'sale' in request.resolver_match.url_name or 'sales' in request.resolver_match.url_name %}active{% endif %}"><i
+                    class="bi bi-cart"></i> Sales</a>
+            <a href="{% url 'stock_dashboard' %}"
+                class="{% if 'stock' in request.resolver_match.url_name %}active{% endif %}"><i
+                    class="bi bi-box-seam"></i> Stock</a>
+            <a href="{% url 'suppliers' %}"
+                class="{% if 'supplier' in request.resolver_match.url_name or 'supply' in request.resolver_match.url_name %}active{% endif %}"><i
+                    class="bi bi-people"></i> Suppliers</a>
+            <a href="{% url 'customer' %}"
+                class="{% if 'customer' in request.resolver_match.url_name %}active{% endif %}"><i
+                    class="bi bi-person-lines-fill"></i> Customers</a>
+            <a href="{% url 'deposits' %}"
+                class="{% if 'deposit' in request.resolver_match.url_name %}active{% endif %}"><i
+                    class="bi bi-cash-coin"></i> Deposits</a>
 
 
         </div>

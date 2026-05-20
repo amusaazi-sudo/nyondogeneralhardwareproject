@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
 <style>
-    .summary-card { transition: background-color 0.2s ease; }
-    .summary-card:hover { background-color: #FFFDD0 !important; }
+    .summary-card {
+        transition: background-color 0.2s ease;
+    }
+
+    .summary-card:hover {
+        background-color: #FFFDD0 !important;
+    }
 </style>
 
 <div class="container-fluid">
@@ -16,7 +21,8 @@
                     </h2>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="{% url 'add_sales' %}" class="btn" style="background-color: #64B5F6; border-color: #64B5F6; color: #000;">
+                    <a href="{% url 'add_sales' %}" class="btn"
+                        style="background-color: #64B5F6; border-color: #64B5F6; color: #000;">
                         <i class="bi bi-plus-circle"></i> Add Sale
                     </a>
                 </div>
@@ -25,8 +31,10 @@
     </div>
 
     <!-- Quick Actions Bar -->
-    <div class="card summary-card mb-4 d-flex flex-row align-items-center justify-content-between px-4 py-3" style="border: none; border-top: 4px solid #64B5F6;">
-        <span class="text-black fw-semibold"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick Actions</span>
+    <div class="card summary-card mb-4 d-flex flex-row align-items-center justify-content-between px-4 py-3"
+        style="border: none; border-top: 4px solid #64B5F6;">
+        <span class="text-black fw-semibold"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick
+            Actions</span>
         <div class="d-flex gap-3">
             <a href="{% url 'sales_receipt' %}" class="btn btn-outline-info btn-sm">
                 <i class="bi bi-receipt"></i> Generate Receipt
@@ -92,12 +100,16 @@
                         <td class="text-white">{{ sale.payment_method }}</td>
                         <td><span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Completed</span></td>
                         <td>
-                            <a href="{% url 'sales_edit' sale.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
-                            <a href="{% url 'sales_delete' sale.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                            <a href="{% url 'sales_edit' sale.pk %}" class="btn btn-sm btn-outline-primary me-1"><i
+                                    class="bi bi-pencil"></i></a>
+                            <a href="{% url 'sales_delete' sale.pk %}" class="btn btn-sm btn-outline-danger"><i
+                                    class="bi bi-trash"></i></a>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7" class="text-white text-center">No sales recorded yet.</td></tr>
+                    <tr>
+                        <td colspan="7" class="text-white text-center">No sales recorded yet.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>

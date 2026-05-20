@@ -19,32 +19,34 @@
     </thead>
     <tbody>
       {% if stocks %}
-        {% for stock in stocks %}
-        <tr>
-          <td>{{ stock.product_name  }}</td>
-          <td>{{ stock.product_code }}</td>
-          <td>{{ stock.category }}</td>
-          <td>{{ stock.quantity }}</td>
-          <td>{{ stock.buying_price }}</td>
-          <td>{{ stock.selling_price }}</td>
-          <td>{{ stock.date|date:'Y-m-d' }}</td>
-           <td>
-            {% if stock.quantity > 0 %}
-              <span class="badge bg-success">In Stock</span>
-            {% else %}
-              <span class="badge bg-danger">Out of Stock</span>
-            {% endif %}
-          <td>
-            <a href="{% url 'stock_edit' stock.id %}" class="btn btn-sm btn-warning" style="text-decoration: none;">Edit</a>
-            <a href="{% url 'stock_delete' stock.id %}" class="btn btn-sm btn-danger" style="text-decoration: none;">Delete</a>
-          </td>
-        </tr>
-        {% endfor %}
+      {% for stock in stocks %}
+      <tr>
+        <td>{{ stock.product_name }}</td>
+        <td>{{ stock.product_code }}</td>
+        <td>{{ stock.category }}</td>
+        <td>{{ stock.quantity }}</td>
+        <td>{{ stock.buying_price }}</td>
+        <td>{{ stock.selling_price }}</td>
+        <td>{{ stock.date|date:'Y-m-d' }}</td>
+        <td>
+          {% if stock.quantity > 0 %}
+          <span class="badge bg-success">In Stock</span>
+          {% else %}
+          <span class="badge bg-danger">Out of Stock</span>
+          {% endif %}
+        <td>
+          <a href="{% url 'stock_edit' stock.id %}" class="btn btn-sm btn-warning"
+            style="text-decoration: none;">Edit</a>
+          <a href="{% url 'stock_delete' stock.id %}" class="btn btn-sm btn-danger"
+            style="text-decoration: none;">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
       {% else %}
-      
-        <tr>
-          <td colspan="6" class="text-center text-muted">stock recorded .</td>
-        </tr>
+
+      <tr>
+        <td colspan="6" class="text-center text-muted">stock recorded .</td>
+      </tr>
       {% endif %}
     </tbody>
   </table>

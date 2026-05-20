@@ -7,12 +7,12 @@
 </div>
 
 {% if messages %}
-    {% for msg in messages %}
-        <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
-            {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    {% endfor %}
+{% for msg in messages %}
+<div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+    {{ msg }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
 {% endif %}
 
 <div class="card shadow-sm" style="max-width: 600px;">
@@ -46,12 +46,13 @@
             </div>
 
             <div class="mb-4 form-check">
-                <input type="checkbox" name="bought_on_credit" class="form-check-input" id="creditCheck"
-                    {% if data.bought_on_credit %}checked{% endif %}>
+                <input type="checkbox" name="bought_on_credit" class="form-check-input" id="creditCheck" {% if
+                    data.bought_on_credit %}checked{% endif %}>
                 <label class="form-check-label" for="creditCheck">Bought goods on credit</label>
             </div>
 
-            <button type="submit" class="btn-btn-style" style="background-color: #64B5F6; border-color: #64B5F6;">Update Customer</button>
+            <button type="submit" class="btn-btn-style" style="background-color: #64B5F6; border-color: #64B5F6;">Update
+                Customer</button>
         </form>
     </div>
 </div>
