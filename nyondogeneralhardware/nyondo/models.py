@@ -65,29 +65,103 @@ class Receipt(models.Model):
         return self.receipt_number
 
 
-class Deposit(models.Model):
-    receipt_number = models.CharField(max_length=50)
-    date = models.DateField(auto_now_add=True)
-    customer_name = models.CharField(max_length=200)
-    NIN = models.TextField(max_length=50, blank=True, null=True)
-    contact = models.IntegerField()
-    signature = models.CharField(max_length=100, blank=True, null=True)
-    deposit_amount = models.IntegerField()
-    expiry_date = models.DateField()
-    total_balance = models.IntegerField()
+class Customer(models.Model):
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField(blank=True, null=True)
+    address = models.CharField(max_length=200, blank=True, null=True)
+    NIN = models.CharField(max_length=50, blank=True, null=True)
+    date_registered = models.DateField(auto_now_add=True)
+    bought_on_credit = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
+    @property
+    def total_debt(self):
+        deposits = self.deposit_set.all()
+        return sum(d.deposit_amount + d.total_balance for d in deposits)
+
+    @property
+    def total_paid(self):
+        deposit_paid = sum(d.deposit_amount for d in self.deposit_set.all())
+        payment_total = sum(p.amount for p in self.payments.all())
+        return deposit_paid + payment_total
+
+    @property
+    def amount_remaining(self):
+        owed = sum(d.total_balance for d in self.deposit_set.all())
+        paid_against_balance = sum(p.amount for p in self.payments.all())
+        return max(owed - paid_against_balance, 0)
+
+    @property
+    def payment_percent(self):
+        if self.total_debt == 0:
+            return 100
+        return min(int((self.total_paid / self.total_debt) * 100), 100)
+
+    @property
+    def payment_status(self):
+        if self.total_debt == 0:
+            return 'No Debt'
+        if self.amount_remaining == 0:
+            return 'Paid'
+        if self.total_paid > 0:
+            return 'Partial'
+        return 'Pending'
+
+
+SCHEME_ITEMS = [
+    ('cement', 'Cement'),
+    ('iron_sheets', 'Iron Sheets'),
+    ('iron_bars', 'Iron Bars'),
+]
+
+
+class Deposit(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, )
+    item = models.CharField(max_length=20, choices=SCHEME_ITEMS)
+    receipt_number = models.CharField(max_length=50, unique=True, editable=False)
+    date = models.DateField(auto_now_add=True)
+    NIN = models.CharField(max_length=50, blank=True, null=True)
+    contact = models.CharField(max_length=20)
+    deposit_amount = models.PositiveIntegerField()
+    expiry_date = models.DateField()
+    total_balance = models.PositiveIntegerField()
+
+    def save(self, *args, **kwargs):
+        if not self.receipt_number:
+            super().save(*args, **kwargs)
+            self.receipt_number = f'DEP-{self.pk:05d}'
+            Deposit.objects.filter(pk=self.pk).update(receipt_number=self.receipt_number)
+        else:
+            super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.receipt_number
+
+
+class CustomerPayment(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='payments')
+    amount = models.PositiveIntegerField()
+    date = models.DateField(auto_now_add=True)
+    note = models.CharField(max_length=200, blank=True)
+
+    def __str__(self):
+        return f"{self.customer} - {self.amount}"
 
 
 class Credit(models.Model):
     receipt_number = models.CharField()
 
 
-
-
 class Signup(models.Model):
     username = models.CharField(max_length=50)
-    email = models.EmailField()
+    email = models.EmailField(max_length=254)
     password = models.TextField(max_length=12)
+
+    def __str__(self):
+        return self.username
 
 
 class Supplier(models.Model):

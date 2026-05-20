@@ -14,13 +14,13 @@
     </div>
     <!-- Quick Access: fixed links — removed two redundant 'suppliers' links that pointed to the current page -->
     <div class="card mb-4" style="border: none; border-top: 4px solid #64B5F6;">
-        <div class="card-body">
-            <h6 class="text-muted mb-3"><i class="bi bi-lightning-charge"></i> Quick Access</h6>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{% url 'add_supplier' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-plus-circle"></i> Add New Supplier</a>
-                <a href="{% url 'supply_reports' %}" class="btn btn-outline-info btn-sm"><i class="bi bi-bar-chart-line"></i> Supply Reports</a>
-            </div>
+      <div class="card-body">
+        <h6 class="text-muted mb-3"><i class="bi bi-lightning-charge-fill text-warning me-2"></i> Quick Access</h6>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{% url 'add_supplier' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-plus-circle"></i> Add New Supplier</a>
+          <a href="{% url 'supply_reports' %}" class="btn btn-outline-info btn-sm"><i class="bi bi-bar-chart-line"></i> Supply Reports</a>
         </div>
+      </div>
     </div>
 <div class="table-responsive">
   <table class="table table-bordered table-striped table-hover">
@@ -60,9 +60,11 @@
             {% endif %}
           </td>
           <td>
-            <a href="{% url 'supplier_view' supplier.id %}" class="btn btn-sm btn-info text-white" title="View"><i class="bi bi-eye"></i></a>
-            <a href="{% url 'supplier_edit' supplier.id %}" class="btn btn-sm btn-warning" title="Edit"><i class="bi bi-pencil"></i></a>
-            <a href="{% url 'supplier_delete' supplier.id %}" class="btn btn-sm btn-danger" title="Delete"><i class="bi bi-trash"></i></a>
+            <div class="d-flex align-items-center gap-2">
+              <a href="{% url 'supplier_view' supplier.id %}" class="btn btn-sm btn-info text-white" title="View"><i class="bi bi-eye"></i></a>
+              <a href="{% url 'supplier_edit' supplier.id %}" class="btn btn-sm btn-warning" title="Edit"><i class="bi bi-pencil"></i></a>
+              <a href="{% url 'supplier_delete' supplier.id %}" class="btn btn-sm btn-danger" title="Delete"><i class="bi bi-trash"></i></a>
+            </div>
           </td>
         </tr>
         {% endfor %}

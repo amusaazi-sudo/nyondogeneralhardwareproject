@@ -2,7 +2,7 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0">Customer Registration</h4>
+    <h4 class="mb-0">Edit Customer</h4>
     <a href="{% url 'customer' %}" class="btn btn-sm btn-outline-secondary">Back to Customers</a>
 </div>
 
@@ -48,10 +48,10 @@
             <div class="mb-4 form-check">
                 <input type="checkbox" name="bought_on_credit" class="form-check-input" id="creditCheck"
                     {% if data.bought_on_credit %}checked{% endif %}>
-                <label class="form-check-label" for="creditCheck">Debtor</label>
+                <label class="form-check-label" for="creditCheck">Bought goods on credit</label>
             </div>
 
-            <button type="submit" class="btn-btn-style" style="background-color: #64B5F6; border-color: #64B5F6;">Register Customer</button>
+            <button type="submit" class="btn-btn-style" style="background-color: #64B5F6; border-color: #64B5F6;">Update Customer</button>
         </form>
     </div>
 </div>

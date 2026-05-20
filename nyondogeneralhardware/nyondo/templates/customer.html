@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+
+ <div class="card summary-card mb-4" style="border: none; border-top: 5px solid #64B5F6;">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h2 class="text-black mb-0">
+                        <i class="bi bi-people"></i> Customer Management
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Customers</h4>
+    <a href="{% url 'add_customer' %}" class="btn btn-style" style="background-color: #64B5F6; border-color: #64B5F6;">+ Register Customer</a>
+</div>
+<!-- QUICK ACCESS -->
+<div class="card summary-card mb-4 d-flex flex-row align-items-center justify-content-between px-4 py-3" style="border: none; border-top: 4px solid #64B5F6;">
+        <span class="text-black fw-semibold"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Quick Actions</span>
+        <div class="d-flex gap-3">
+            <a href="{% url 'sales_receipt' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-receipt"></i>Customer Records
+            </a>
+            
+        </div>
+    </div>
+{% if messages %}
+    {% for msg in messages %}
+        <div class="alert alert-{{ msg.tags }} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>NIN</th>
+                    <th>Address</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ customer.name }}</td>
+                    <td>{{ customer.phone }}</td>
+                    <td>{{ customer.email|default:"—" }}</td>
+                    <td>{{ customer.NIN|default:"—" }}</td>
+                    <td>{{ customer.address|default:"—" }}</td>
+                    <td>{{ customer.date_registered }}</td>
+                    <td>
+                        <a href="{% url 'customer_view' customer.pk %}" class="btn btn-sm btn-info">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-sm btn-warning ms-2">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'customer_delete' customer.pk %}" class="btn btn-sm btn-danger ms-2">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center text-muted py-3">No customers registered yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

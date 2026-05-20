@@ -46,4 +46,19 @@ urlpatterns = [
     path('suppliers/<int:pk>/delete/', views.supplier_delete, name='supplier_delete'),
     path('suppliers/<int:pk>/view/', views.supplier_view, name='supplier_view'),
     path('suppliers/reports/', views.supply_reports, name='supply_reports'),
+
+# CUSTOMER
+    path('customers/', views.customers, name='customer'),
+    path('customers/add/', views.add_customer, name='add_customer'),
+    path('customers/<int:pk>/view/', views.customer_view, name='customer_view'),
+    path('customers/<int:pk>/edit/', views.customer_edit, name='customer_edit'),
+    path('customers/<int:pk>/delete/', views.customer_delete, name='customer_delete'),
+
+# DEPOSIT SCHEME
+    path('deposits/', views.deposits, name='deposits'),
+    path('deposits/add/', views.add_deposit, name='add_deposit'),
+    path('deposits/receipts/', views.deposit_receipts, name='deposit_receipts'),
+    path('deposits/<int:pk>/receipt/', views.deposit_receipt, name='deposit_receipt'),
+    path('deposits/<int:pk>/edit/', views.deposit_edit, name='deposit_edit'),
+    path('deposits/<int:pk>/delete/', views.deposit_delete, name='deposit_delete'),
 ]

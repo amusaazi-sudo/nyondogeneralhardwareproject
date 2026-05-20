@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
+from django.db.models import Sum
 from django.utils import timezone
-from .models import Stock, Sale, Receipt, Supplier, SupplierPayment
+from .models import Stock, Sale, Receipt, Supplier, SupplierPayment, Customer, CustomerPayment, Deposit, SCHEME_ITEMS
 from datetime import date as date_type
 # create your views here
 
@@ -546,3 +547,252 @@ def supplier_view(request, pk):
         'payments': payments,
     })
 
+
+
+# CUSTOMER VIEWS
+
+def customers(request):
+    all_customers = Customer.objects.all().order_by('-date_registered')
+    return render(request, 'customer.html', {'customers': all_customers})
+
+
+def add_customer(request):
+    if request.method == 'POST':
+        body = request.POST
+        errors = []
+
+        name = body.get('name', '').strip()
+        phone = body.get('phone', '').strip()
+
+        if not name:
+            errors.append('Customer name is required.')
+        if not phone:
+            errors.append('Phone number is required.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'customer_reg.html', {'data': body})
+
+        Customer.objects.create(
+            name=name,
+            phone=phone,
+            email=body.get('email') or None,
+            address=body.get('address') or None,
+            NIN=body.get('NIN') or None,
+            bought_on_credit=bool(body.get('bought_on_credit')),
+        )
+        messages.success(request, 'Customer registered successfully.')
+        return redirect('customer')
+    return render(request, 'customer_reg.html')
+
+
+def customer_edit(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == 'POST':
+        body = request.POST
+        errors = []
+        name = body.get('name', '').strip()
+        phone = body.get('phone', '').strip()
+
+        if not name:
+            errors.append('Customer name is required.')
+        if not phone:
+            errors.append('Phone number is required.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'customer_edit.html', {'data': body, 'customer': customer})
+
+        customer.name = name
+        customer.phone = phone
+        customer.email = body.get('email') or None
+        customer.address = body.get('address') or None
+        customer.NIN = body.get('NIN') or None
+        customer.bought_on_credit = bool(body.get('bought_on_credit'))
+        customer.save()
+
+        messages.success(request, 'Customer updated successfully.')
+        return redirect('customer')
+
+    return render(request, 'customer_edit.html', {
+        'data': {
+            'name': customer.name,
+            'phone': customer.phone,
+            'email': customer.email,
+            'address': customer.address,
+            'NIN': customer.NIN,
+            'bought_on_credit': customer.bought_on_credit,
+        },
+        'customer': customer,
+    })
+
+
+def customer_delete(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == 'POST':
+        customer.delete()
+        messages.success(request, 'Customer deleted successfully.')
+        return redirect('customer')
+    return render(request, 'customer_delete.html', {'customer': customer})
+
+
+def customer_view(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    deposits = customer.deposit_set.order_by('-date')
+    payments = customer.payments.order_by('-date')
+
+    if request.method == 'POST':
+        errors = []
+        try:
+            amount = int(request.POST.get('amount', '0'))
+            if amount <= 0:
+                errors.append('Payment amount must be greater than zero.')
+        except (ValueError, TypeError):
+            errors.append('Enter a valid whole number for the amount.')
+            amount = 0
+
+        remaining = customer.amount_remaining
+        if not errors and amount > remaining:
+            errors.append(f'Amount exceeds remaining balance of UGX {remaining}.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            CustomerPayment.objects.create(
+                customer=customer,
+                amount=amount,
+                note=request.POST.get('note', '').strip(),
+            )
+            messages.success(request, 'Payment recorded successfully.')
+            return redirect('customer_view', pk=pk)
+
+    return render(request, 'customer_tracker.html', {
+        'customer': customer,
+        'deposits': deposits,
+        'payments': payments,
+    })
+
+
+# DEPOSIT SCHEME VIEWS
+
+def deposits(request):
+    all_deposits = Deposit.objects.select_related('customer').order_by('-date')
+    total_debtors = all_deposits.count()
+    total_received = all_deposits.aggregate(total=Sum('deposit_amount'))['total'] or 0
+    return render(request, 'deposit.html', {
+        'deposits': all_deposits,
+        'total_debtors': total_debtors,
+        'total_received': total_received,
+    })
+
+
+def add_deposit(request):
+    customers = Customer.objects.all().order_by('name')
+    if request.method == 'POST':
+        body = request.POST
+        errors = []
+        try:
+            deposit_amount = int(body.get('deposit_amount'))
+            if deposit_amount <= 0:
+                errors.append('Deposit amount must be greater than zero.')
+        except (ValueError, TypeError):
+            errors.append('Deposit amount must be a valid number.')
+            deposit_amount = None
+        try:
+            total_balance = int(body.get('total_balance'))
+            if total_balance < 0:
+                errors.append('Total balance must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Total balance must be a valid number.')
+            total_balance = None
+        try:
+            expiry_date = date_type.fromisoformat(body.get('expiry_date'))
+            if expiry_date <= date_type.today():
+                errors.append('Expiry date must be in the future.')
+        except (ValueError, TypeError):
+            errors.append('Please enter a valid expiry date.')
+            expiry_date = None
+        if not body.get('customer'):
+            errors.append('Please select a customer.')
+        if not body.get('contact', '').strip():
+            errors.append('Contact is required.')
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS, 'data': body})
+        Deposit.objects.create(
+            customer=get_object_or_404(Customer, pk=body.get('customer')),
+            item=body.get('item'),
+            NIN=body.get('NIN') or None,
+            contact=body.get('contact', '').strip(),
+            deposit_amount=deposit_amount,
+            expiry_date=expiry_date,
+            total_balance=total_balance,
+        )
+        messages.success(request, 'Deposit recorded successfully.')
+        return redirect('deposits')
+    return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS})
+
+
+def deposit_edit(request, pk):
+    deposit = get_object_or_404(Deposit, pk=pk)
+    customers = Customer.objects.all().order_by('name')
+    if request.method == 'POST':
+        body = request.POST
+        errors = []
+        try:
+            deposit_amount = int(body.get('deposit_amount'))
+            if deposit_amount <= 0:
+                errors.append('Deposit amount must be greater than zero.')
+        except (ValueError, TypeError):
+            errors.append('Deposit amount must be a valid number.')
+            deposit_amount = None
+        try:
+            total_balance = int(body.get('total_balance'))
+            if total_balance < 0:
+                errors.append('Total balance must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Total balance must be a valid number.')
+            total_balance = None
+        try:
+            expiry_date = date_type.fromisoformat(body.get('expiry_date'))
+        except (ValueError, TypeError):
+            errors.append('Please enter a valid expiry date.')
+            expiry_date = None
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'deposit_edit.html', {'deposit': deposit, 'customers': customers, 'scheme_items': SCHEME_ITEMS})
+        deposit.customer = get_object_or_404(Customer, pk=body.get('customer'))
+        deposit.item = body.get('item')
+        deposit.NIN = body.get('NIN') or None
+        deposit.contact = body.get('contact', '').strip()
+        deposit.deposit_amount = deposit_amount
+        deposit.expiry_date = expiry_date
+        deposit.total_balance = total_balance
+        deposit.save()
+        messages.success(request, 'Deposit updated successfully.')
+        return redirect('deposits')
+    return render(request, 'deposit_edit.html', {'deposit': deposit, 'customers': customers, 'scheme_items': SCHEME_ITEMS})
+
+
+def deposit_delete(request, pk):
+    deposit = get_object_or_404(Deposit, pk=pk)
+    if request.method == 'POST':
+        deposit.delete()
+        messages.success(request, 'Deposit deleted.')
+        return redirect('deposits')
+    return render(request, 'deposit_delete.html', {'deposit': deposit})
+
+
+def deposit_receipts(request):
+    receipts = Deposit.objects.select_related('customer').order_by('-date')
+    return render(request, 'deposit_receipts.html', {'receipts': receipts})
+
+
+def deposit_receipt(request, pk):
+    deposit = get_object_or_404(Deposit, pk=pk)
+    return render(request, 'deposit_reciept.html', {'deposit': deposit})

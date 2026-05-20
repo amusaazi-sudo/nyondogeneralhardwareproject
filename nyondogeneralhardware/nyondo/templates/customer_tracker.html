@@ -33,14 +33,13 @@
     }
 </style>
 
-<!-- Header -->
 <div class="card mb-3" style="border:none; border-top:5px solid #64B5F6;">
     <div class="card-body d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>{{ supplier.supplier_company }}</h5>
+        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>{{ customer.name }}</h5>
         <div class="d-flex gap-2">
-            <a href="{% url 'supplier_edit' supplier.id %}" class="btn btn-sm btn-warning"><i
+            <a href="{% url 'customer_edit' customer.id %}" class="btn btn-sm btn-warning"><i
                     class="bi bi-pencil me-1"></i>Edit</a>
-            <a href="{% url 'suppliers' %}" class="btn btn-sm btn-outline-secondary"><i
+            <a href="{% url 'customer' %}" class="btn btn-sm btn-outline-secondary"><i
                     class="bi bi-arrow-left me-1"></i>Back</a>
         </div>
     </div>
@@ -55,33 +54,35 @@
 {% endif %}
 
 <div class="row g-3">
-
-    <!-- Supplier Info -->
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body">
-                <p class="section-title">Supplier Information</p>
+                <p class="section-title">Customer Information</p>
                 <table class="table table-sm table-borderless mb-0">
                     <tbody>
                         <tr>
-                            <td class="info-label">Company</td>
-                            <td>{{ supplier.supplier_company }}</td>
-                        </tr>
-                        <tr>
-                            <td class="info-label">Contact Name</td>
-                            <td>{{ supplier.name }}</td>
+                            <td class="info-label">Name</td>
+                            <td>{{ customer.name }}</td>
                         </tr>
                         <tr>
                             <td class="info-label">Phone</td>
-                            <td>{{ supplier.phone }}</td>
+                            <td>{{ customer.phone }}</td>
                         </tr>
                         <tr>
                             <td class="info-label">Email</td>
-                            <td>{{ supplier.email|default:"—" }}</td>
+                            <td>{{ customer.email|default:"—" }}</td>
                         </tr>
                         <tr>
                             <td class="info-label">Address</td>
-                            <td>{{ supplier.address|default:"—" }}</td>
+                            <td>{{ customer.address|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">NIN</td>
+                            <td>{{ customer.NIN|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">Registered</td>
+                            <td>{{ customer.date_registered }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -89,100 +90,78 @@
         </div>
     </div>
 
-    <!-- Order Info -->
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-body">
-                <p class="section-title">Order Details</p>
+                <p class="section-title">Debt Summary</p>
                 <table class="table table-sm table-borderless mb-0">
                     <tbody>
                         <tr>
-                            <td class="info-label">Product</td>
-                            <td>{{ supplier.get_product_display }}{% if supplier.specification %} — {{
-                                supplier.get_specification_display }}{% endif %}</td>
+                            <td class="info-label">Original Debt</td>
+                            <td>UGX {{ customer.total_debt }}</td>
                         </tr>
                         <tr>
-                            <td class="info-label">Quantity</td>
-                            <td>{{ supplier.quantity }}</td>
+                            <td class="info-label">Paid</td>
+                            <td>UGX {{ customer.total_paid }}</td>
                         </tr>
                         <tr>
-                            <td class="info-label">Unit Price (Deposit)</td>
-                            <td>UGX {{ supplier.deposit }}</td>
+                            <td class="info-label">Remaining</td>
+                            <td>UGX {{ customer.amount_remaining }}</td>
                         </tr>
                         <tr>
-                            <td class="info-label">Total Cost</td>
-                            <td><strong>UGX {{ supplier.total_cost }}</strong></td>
+                            <td class="info-label">Status</td>
+                            <td>
+                                {% if customer.payment_status == 'Paid' %}
+                                <span class="badge bg-success">Paid</span>
+                                {% elif customer.payment_status == 'Partial' %}
+                                <span class="badge bg-warning text-dark">Partial</span>
+                                {% elif customer.payment_status == 'Pending' %}
+                                <span class="badge bg-danger">Pending</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No Debt</span>
+                                {% endif %}
+                            </td>
                         </tr>
-                        <tr>
-                            <td class="info-label">Delivery Date</td>
-                            <td>{{ supplier.delivery_date|date:"d M Y" }}</td>
-                        </tr>
-                        <tr>
-                            <td class="info-label">Due Date</td>
-                            <td>{% if supplier.due_date %}{{ supplier.due_date|date:"d M Y" }}{% else %}—{% endif %}</td>
-                        </tr>
-
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- Payment Progress -->
     <div class="col-12">
         <div class="card">
             <div class="card-body">
                 <p class="section-title">Payment Progress</p>
                 <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
-                    <span>Paid: <strong>UGX {{ supplier.total_paid }}</strong></span>
-                    <span>Remaining: <strong>UGX {{ supplier.amount_remaining }}</strong></span>
-                    <span>
-                        {% if supplier.payment_status == 'Paid' %}
-                        <span class="badge bg-success fs-6">Paid</span>
-                        {% elif supplier.payment_status == 'Partial' %}
-                        <span class="badge bg-warning text-dark fs-6">Partial</span>
-                        {% else %}
-                        <span class="badge bg-danger fs-6">Pending</span>
-                        {% endif %}
-                    </span>
+                    <span>Paid: <strong>UGX {{ customer.total_paid }}</strong></span>
+                    <span>Remaining: <strong>UGX {{ customer.amount_remaining }}</strong></span>
+                    <span><strong>{{ customer.payment_percent }}%</strong></span>
                 </div>
-                <div class="progress">
-                    {% if supplier.payment_status == 'Paid' %}
-                    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar"
-                        style="width:{{ supplier.payment_percent }}%" aria-valuenow="{{ supplier.payment_percent }}"
-                        aria-valuemin="0" aria-valuemax="100">{{ supplier.payment_percent }}%</div>
-                    {% elif supplier.payment_status == 'Partial' %}
-                    <div class="progress-bar bg-warning text-dark progress-bar-striped progress-bar-animated"
-                        role="progressbar" style="width:{{ supplier.payment_percent }}%"
-                        aria-valuenow="{{ supplier.payment_percent }}" aria-valuemin="0" aria-valuemax="100">{{
-                        supplier.payment_percent }}%</div>
-                    {% else %}
-                    <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" role="progressbar"
-                        style="width:{% if supplier.payment_percent == 0 %}5{% else %}{{ supplier.payment_percent }}{% endif %}%"
-                        aria-valuenow="{{ supplier.payment_percent }}" aria-valuemin="0" aria-valuemax="100">
-                        {{ supplier.payment_percent }}%</div>
-                    {% endif %}
+                <div class="progress mb-2">
+                    <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar"
+                        style="width:{{ customer.payment_percent }}%" aria-valuenow="{{ customer.payment_percent }}"
+                        aria-valuemin="0" aria-valuemax="100">{{ customer.payment_percent }}%</div>
                 </div>
                 <div class="d-flex justify-content-between mt-1" style="font-size:0.78rem; color:#888;">
                     <span>UGX 0</span>
-                    <span>UGX {{ supplier.total_cost }}</span>
+                    <span>UGX {{ customer.total_debt }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Record a Payment -->
-    {% if supplier.payment_status != 'Paid' %}
+    {% if customer.total_debt > 0 %}
     <div class="col-md-5">
         <div class="card border-success">
             <div class="card-body">
                 <p class="section-title" style="color:#198754; border-color:#198754;">Record a Payment</p>
+                {% if customer.amount_remaining > 0 %}
                 <form method="post">
                     {% csrf_token %}
                     <div class="mb-2">
                         <label class="form-label form-label-sm">Amount (UGX)</label>
                         <input type="number" name="amount" class="form-control form-control-sm" min="1" step="0.01"
-                            max="{{ supplier.amount_remaining }}" placeholder="Enter amount" required>
+                            max="{{ customer.amount_remaining }}" placeholder="Enter amount" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label form-label-sm">Note (optional)</label>
@@ -192,13 +171,14 @@
                     <button type="submit" class="btn btn-success btn-sm w-100"><i
                             class="bi bi-cash-coin me-1"></i>Submit Payment</button>
                 </form>
+                {% else %}
+                <div class="alert alert-success mb-0">This debtor has cleared their outstanding balance.</div>
+                {% endif %}
             </div>
         </div>
     </div>
-    {% endif %}
 
-    <!-- Payment History -->
-    <div class="{% if supplier.payment_status != 'Paid' %}col-md-7{% else %}col-12{% endif %}">
+    <div class="col-md-7">
         <div class="card">
             <div class="card-body">
                 <p class="section-title">Payment History</p>
@@ -213,29 +193,66 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for p in payments %}
+                        {% for payment in payments %}
                         <tr>
                             <td>{{ forloop.counter }}</td>
-                            <td>{{ p.date|date:"d M Y" }}</td>
-                            <td>{{ p.amount }}</td>
-                            <td>{{ p.note|default:"—" }}</td>
+                            <td>{{ payment.date|date:"d M Y" }}</td>
+                            <td>{{ payment.amount }}</td>
+                            <td>{{ payment.note|default:"—" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                     <tfoot>
                         <tr class="table-success fw-bold">
                             <td colspan="2">Total Paid</td>
-                            <td>UGX {{ supplier.total_paid }}</td>
+                            <td>UGX {{ customer.total_paid }}</td>
                             <td></td>
                         </tr>
                     </tfoot>
                 </table>
                 {% else %}
-                <p class="text-muted mb-0">No payments recorded yet.</p>
+                <p class="text-muted mb-0">No debtor payments recorded yet.</p>
                 {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if deposits %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <p class="section-title">Deposit Records</p>
+                <table class="table table-sm table-striped mb-0">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>#</th>
+                            <th>Receipt</th>
+                            <th>Item</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                            <th>Expiry</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for deposit in deposits %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ deposit.receipt_number }}</td>
+                            <td>{{ deposit.get_item_display }}</td>
+                            <td>UGX {{ deposit.deposit_amount }}</td>
+                            <td>UGX {{ deposit.total_balance }}</td>
+                            <td>{{ deposit.expiry_date }}</td>
+                            <td>{{ deposit.date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
 {% endblock %}

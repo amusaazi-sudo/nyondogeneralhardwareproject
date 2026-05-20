@@ -1,156 +1,83 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deposit Receipt</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #BBDEFB, #64B5F6);
-      margin: 0;
-      padding: 20px;
-    }
+{% extends 'base.html' %}
+{% block content %}
 
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-    }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Deposit Receipt</h4>
+    <a href="{% url 'deposit_receipts' %}" class="btn btn-secondary btn-sm">Back to Receipts</a>
+</div>
 
-    h4 {
-      text-align: center;
-      margin-bottom: 5px;
-      color: #333;
-    }
-
-    p {
-      text-align: center;
-      margin: 2px 0;
-      color: #555;
-    }
-
-    hr {
-      margin: 15px 0;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .form-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-    }
-
-    .form-group {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    label {
-      font-weight: bold;
-      margin-bottom: 5px;
-      color: #444;
-    }
-
-    input {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    button {
-      background: #64B5F6;
-      color: #fff;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background: #0056b3;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h4><i class="fas fa-hard-hat"></i> NYONDO GENERAL HARDWARE LTD</h4>
-    <p>"Quality meets Hardwork"</p>
-    <p>Located at Ssonde, Mukono</p>
-    <p>+256 705 643 214 | +256 778 435 256</p>
-    <p><strong> DEPOSIT</strong></p>
-    <hr>
-
-    <form method="POST">
-      {% csrf_token %}
-      <!-- Receipt No and Date -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="receipt_number">Receipt No:</label>
-          <input type="text" placeholder="[DEP-000123]" name="receipt_number">
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="mb-4 text-center">
+            <h5 class="fw-bold"><i class="bi bi-building"></i> NYONDO GENERAL HARDWARE LTD</h5>
+            <p class="mb-0">Quality meets Hardwork</p>
+            <p class="mb-0">Ssonde, Mukono</p>
+            <p class="mb-0">+256 705 643 214 | +256 778 435 256</p>
         </div>
-        <div class="form-group">
-          <label for="date">Date:</label>
-          <input type="date" name="date">
-        </div>
-      </div>
 
-      <!-- Customer Name and NIN -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="customer_name">Customer Name:</label>
-          <input type="text" name="customer_name">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Receipt No</strong>
+                    <p class="mb-0">{{ deposit.receipt_number }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Date</strong>
+                    <p class="mb-0">{{ deposit.date }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Customer</strong>
+                    <p class="mb-0">{{ deposit.customer.name }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>NIN</strong>
+                    <p class="mb-0">{{ deposit.NIN|default:'—' }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Contact</strong>
+                    <p class="mb-0">{{ deposit.contact }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Item</strong>
+                    <p class="mb-0">{{ deposit.get_item_display }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Deposit Amount</strong>
+                    <p class="mb-0">UGX {{ deposit.deposit_amount|floatformat:0 }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Total Balance</strong>
+                    <p class="mb-0">UGX {{ deposit.total_balance|floatformat:0 }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border p-3 rounded">
+                    <strong>Expiry Date</strong>
+                    <p class="mb-0">{{ deposit.expiry_date }}</p>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-          <label for="NIN">NIN:</label>
-          <input type="text" name="NIN">
-        </div>
-      </div>
 
-      <!-- Contact and Signature -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="contact">Contact:</label>
-          <input type="number" name="contact">
+        <div class="mt-4 text-end">
+            <button onclick="window.print()" class="btn btn-info btn-sm">
+                <i class="bi bi-printer"></i> Print Receipt
+            </button>
         </div>
-        <div class="form-group">
-          <label for="signature">Signature:</label>
-          <input type="text" name="signature">
-        </div>
-      </div>
+    </div>
+</div>
 
-      <!-- Deposit Amount and Expiry Date -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="deposit_amount">Deposit Amount:</label>
-          <input type="number" name="deposit_amount">
-        </div>
-        <div class="form-group">
-          <label for="expiry_date">Expiry Date:</label>
-          <input type="date" name="expiry_date">
-        </div>
-      </div>
-
-      <!-- Total Balance -->
-      <div class="form-group">
-        <label for="total_balance">Total Balance:</label>
-        <input type="number" placeholder="UGX 100,000" name="total_balance">
-      </div>
-
-      <button type="submit">ISSUE</button>
-    </form>
-  </div>
-</body>
-</html>
+{% endblock %}
