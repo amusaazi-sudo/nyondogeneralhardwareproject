@@ -1,14 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<div class="mb-3">
+  <a href="{% url 'sales_dashboard' %}" class="btn btn-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+</div>
+
 <div class="table-responsive">
   <table class="table table-bordered table-striped table-hover">
     <caption class="text-center fw-bold">Sales Records</caption>
     <thead class="table-primary">
       <tr>
         <th>Product Sold</th>
+        <th>Customer</th>
         <th>Date</th>
         <th>Quantity</th>
+        <th>Transport</th>
         <th>Receipt Number</th>
         <th>Payment Method</th>
         <th>Actions</th>
@@ -19,11 +27,14 @@
       {% for sale in sales %}
       <tr>
         <td>{{ sale.product_sold }}</td>
+        <td>{{ sale.customer.name|default:'—' }}</td>
         <td>{{ sale.date }}</td>
         <td>{{ sale.quantity_sold }}</td>
+        <td>{{ sale.transport_display }}</td>
         <td>{{ sale.receipt_number }}</td>
         <td>{{ sale.payment_method }}</td>
         <td>
+          <a href="{% url 'sale_receipt' sale.pk %}" class="me-2" title="Issue Receipt"><i class="bi bi-receipt"></i></a>
           <a href="{% url 'sales_edit' sale.id %}"><i class="bi bi-pencil"></i></a>
           <a href="{% url 'sales_delete' sale.id %}"><i class="bi bi-trash"></i></a>
         </td>
@@ -31,7 +42,7 @@
       {% endfor %}
       {% else %}
       <tr>
-        <td colspan="6" class="text-center text-muted"> sales records.</td>
+        <td colspan="8" class="text-center text-muted"> sales records.</td>
       </tr>
       {% endif %}
     </tbody>

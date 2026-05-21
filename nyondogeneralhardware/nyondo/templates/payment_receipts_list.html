@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+            background: white;
+        }
+        
+        .sidebar {
+            display: none !important;
+        }
+        
+        .wrapper {
+            display: block !important;
+        }
+        
+        .content {
+            padding: 0 !important;
+            background: white !important;
+        }
+        
+        .no-print {
+            display: none !important;
+        }
+        
+        .receipt-item {
+            page-break-inside: avoid;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 5px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        
+        .receipt-header-compact {
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        
+        .receipt-row-compact {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .receipt-label {
+            font-weight: bold;
+            width: 40%;
+        }
+        
+        .receipt-value {
+            text-align: right;
+            width: 60%;
+        }
+        
+        .all-receipts-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    }
+    
+    .all-receipts-container {
+        display: none;
+    }
+    
+    @media print {
+        .table-view {
+            display: none !important;
+        }
+        
+        .all-receipts-container {
+            display: block;
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <h4 class="mb-0">Payment Receipts Records</h4>
+    <div>
+        <button onclick="window.print()" class="btn btn-primary btn-sm me-2">
+            <i class="bi bi-printer"></i> Print All Receipts
+        </button>
+        <a href="{% url 'deposits' %}" class="btn btn-secondary btn-sm">Back to Deposits</a>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="card mb-4 no-print">
+    <div class="card-body">
+        <h6 class="card-title">Search & Filter</h6>
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Customer Name</label>
+                <input type="text" name="customer" class="form-control" placeholder="Search by customer name" value="{{ customer_filter }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From Date</label>
+                <input type="datetime-local" name="from_date" class="form-control" value="{{ from_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Date</label>
+                <input type="datetime-local" name="to_date" class="form-control" value="{{ to_date }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </form>
+        {% if customer_filter or from_date or to_date %}
+        <div class="mt-2">
+            <a href="{% url 'payment_receipts_list' %}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Screen View: Receipts Table -->
+<div class="card table-view">
+    <div class="card-body">
+        {% if receipts %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Receipt #</th>
+                            <th>Customer Name</th>
+                            <th>Phone</th>
+                            <th>Deposit Ref</th>
+                            <th>Item</th>
+                            <th>Amount Paid</th>
+                            <th>Date Issued</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for receipt in receipts %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ receipt.payment_receipt_number }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ receipt.customer_name }}</strong>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ receipt.customer_phone }}</small>
+                            </td>
+                            <td>
+                                <code>{{ receipt.deposit_receipt_number }}</code>
+                            </td>
+                            <td>{{ receipt.item_name }}</td>
+                            <td>
+                                <strong class="text-success">UGX {{ receipt.amount_paid|floatformat:0 }}</strong>
+                            </td>
+                            <td>
+                                <small>{{ receipt.payment_date|date:"d/m/Y H:i" }}</small>
+                            </td>
+                            <td>
+                                <a href="{% url 'payment_receipt' receipt.id %}" class="btn btn-sm btn-outline-primary" title="View Receipt">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Summary Stats -->
+            <div class="row mt-4 g-3 no-print">
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="text-muted small">Total Receipts</div>
+                            <div class="h5 mb-0">{{ receipts.count }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="text-muted small">Total Amount Paid</div>
+                            <div class="h5 mb-0 text-success">
+                                UGX {{ total_amount_paid|floatformat:0 }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i> No payment receipts found. 
+                {% if customer_filter or from_date or to_date %}
+                    Try adjusting your filter criteria.
+                {% else %}
+                    Start by recording an installment payment on a deposit.
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Print View: All Receipts Compact Format -->
+<div class="all-receipts-container">
+    {% if receipts %}
+        {% for receipt in receipts %}
+        <div class="receipt-item">
+            <!-- Header -->
+            <div class="receipt-header-compact">
+                NYONDO GENERAL HARDWARE - PAYMENT RECEIPT
+            </div>
+            
+            <!-- Receipt Number and Date -->
+            <div class="receipt-row-compact">
+                <span class="receipt-label">Receipt #:</span>
+                <span class="receipt-value">{{ receipt.payment_receipt_number }}</span>
+            </div>
+            <div class="receipt-row-compact">
+                <span class="receipt-label">Date:</span>
+                <span class="receipt-value">{{ receipt.payment_date|date:"d/m/Y H:i" }}</span>
+            </div>
+            
+            <!-- Customer Information -->
+            <div class="receipt-row-compact" style="border-top: 1px solid #ccc; padding-top: 4px; margin-top: 4px;">
+                <span class="receipt-label">Customer:</span>
+                <span class="receipt-value">{{ receipt.customer_name }}</span>
+            </div>
+            <div class="receipt-row-compact">
+                <span class="receipt-label">Phone:</span>
+                <span class="receipt-value">{{ receipt.customer_phone }}</span>
+            </div>
+            {% if receipt.customer_nin %}
+            <div class="receipt-row-compact">
+                <span class="receipt-label">NIN:</span>
+                <span class="receipt-value">{{ receipt.customer_nin }}</span>
+            </div>
+            {% endif %}
+            
+            <!-- Deposit Details -->
+            <div class="receipt-row-compact" style="border-top: 1px solid #ccc; padding-top: 4px; margin-top: 4px;">
+                <span class="receipt-label">Deposit Ref:</span>
+                <span class="receipt-value">{{ receipt.deposit_receipt_number }}</span>
+            </div>
+            <div class="receipt-row-compact">
+                <span class="receipt-label">Item:</span>
+                <span class="receipt-value">{{ receipt.item_name }}</span>
+            </div>
+            <div class="receipt-row-compact">
+                <span class="receipt-label">Total Deposit:</span>
+                <span class="receipt-value">UGX {{ receipt.total_deposit_amount|floatformat:0 }}</span>
+            </div>
+            <div class="receipt-row-compact">
+                <span class="receipt-label">Total Balance Owed:</span>
+                <span class="receipt-value">UGX {{ receipt.total_balance_owed|floatformat:0 }}</span>
+            </div>
+            
+            <!-- Payment Details -->
+            <div class="receipt-row-compact" style="border-top: 1px solid #ccc; padding-top: 4px; margin-top: 4px;">
+                <span class="receipt-label">Previous Balance:</span>
+                <span class="receipt-value">UGX {{ receipt.balance_before_payment|floatformat:0 }}</span>
+            </div>
+            <div class="receipt-row-compact" style="font-weight: bold; font-size: 12px; padding: 6px 0; border-top: 1px solid #333; border-bottom: 2px solid #333;">
+                <span class="receipt-label">AMOUNT PAID:</span>
+                <span class="receipt-value">UGX {{ receipt.amount_paid|floatformat:0 }}</span>
+            </div>
+            <div class="receipt-row-compact">
+                <span class="receipt-label">New Balance:</span>
+                <span class="receipt-value">UGX {{ receipt.balance_after_payment|floatformat:0 }}</span>
+            </div>
+            {% if receipt.note %}
+            <div class="receipt-row-compact">
+                <span class="receipt-label">Note:</span>
+                <span class="receipt-value">{{ receipt.note }}</span>
+            </div>
+            {% endif %}
+            
+            <!-- Footer -->
+            <div style="text-align: center; font-size: 9px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #ccc;">
+                Thank you for your payment
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}

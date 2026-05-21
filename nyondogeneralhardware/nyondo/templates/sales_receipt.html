@@ -22,6 +22,7 @@
                 <tr>
                     <th>#</th>
                     <th>Receipt No</th>
+                    <th>Customer</th>
                     <th>Product Sold</th>
                     <th>Qty</th>
                     <th>Payment</th>
@@ -35,6 +36,7 @@
                     <td>{{ forloop.counter }}</td>
                     <!-- receipt_number is auto-set from sale pk in Receipt.save() -->
                     <td><span class="badge bg-primary">{{ receipt.receipt_number }}</span></td>
+                    <td>{{ receipt.sale.customer.name|default:"N/A" }}</td>
                     <td>{{ receipt.sale.product_sold }}</td>
                     <td>{{ receipt.sale.quantity_sold }}</td>
                     <td>{{ receipt.sale.payment_method }}</td>
@@ -43,7 +45,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center text-muted">No receipts yet. Add a sale to generate one.</td>
+                    <td colspan="8" class="text-center text-muted">No receipts yet. Add a sale to generate one.</td>
                 </tr>
                 {% endfor %}
             </tbody>

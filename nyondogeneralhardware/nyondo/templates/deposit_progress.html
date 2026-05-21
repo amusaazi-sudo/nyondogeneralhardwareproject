@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Deposit Progress</h4>
+    <a href="{% url 'deposits' %}" class="btn btn-secondary btn-sm">Back to Deposits</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12 mb-3">
+                <h5 class="mb-1">Deposit Overview</h5>
+                <div class="d-flex justify-content-between align-items-center mb-2" style="border: none; border-top: 5px solid #64B5F6;">
+                    <small class="text-muted">Receipt: <strong>{{ deposit.receipt_number }}</strong></small>
+                    <small class="text-muted">Customer: <strong>{{ deposit.customer.name }}</strong></small>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="text-muted small">Item</div>
+                <div>{{ deposit.get_item_display }}</div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="text-muted small">Deposit Paid</div>
+                <div>UGX {{ deposit.deposit_amount|floatformat:0 }}</div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="text-muted small">Total Balance</div>
+                <div>UGX {{ deposit.total_balance|floatformat:0 }}</div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="text-muted small">Remaining</div>
+                <div>UGX {{ deposit.amount_remaining|floatformat:0 }}</div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="text-muted small">Expiry</div>
+                <div>{{ deposit.expiry_date }}</div>
+            </div>
+
+            <div class="col-md-4 mb-3" >
+                <div class="text-muted small">Progress</div>
+                <div class="w-100">
+                    <div class="progress" style="height:10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ deposit.progress_percent }}%; background-color: var(--primary-blue);" aria-valuenow="{{ deposit.progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <small class="text-muted d-block mt-1">{{ deposit.progress_percent }}% paid</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-body">
+                <p class="section-title">Submit Installment</p>
+                {% if deposit.amount_remaining > 0 %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Amount (UGX)</label>
+                        <input name="amount" type="number" min="1" max="{{ deposit.amount_remaining }}" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note (optional)</label>
+                        <input name="note" type="text" class="form-control" placeholder="e.g. Mobile money">
+                    </div>
+                    <button class="btn w-100 record-payment" type="submit" style="background-color: #64B5F6;">Record Payment</button>
+                </form>
+                {% else %}
+                <div class="alert alert-success">This deposit is already fully paid.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <p class="section-title mb-0">Installment History</p>
+                <a href="{% url 'payment_receipts_list' %}?customer={{ deposit.customer.name }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-file-earmark"></i> All Receipts
+                </a>
+            </div>
+            <div class="card-body">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Note</th>
+                                <th>Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ payment.date }}</td>
+                                <td><strong class="text-success">UGX {{ payment.amount|floatformat:0 }}</strong></td>
+                                <td><small>{{ payment.note|default:'—' }}</small></td>
+                                <td>
+                                    {% if payment.receipt %}
+                                        <a href="{% url 'payment_receipt' payment.receipt.id %}" class="btn btn-xs btn-outline-info" title="View Receipt">
+                                            <i class="bi bi-eye"></i> {{ payment.receipt.payment_receipt_number }}
+                                        </a>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No installment payments have been recorded for this deposit.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

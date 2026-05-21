@@ -41,13 +41,18 @@
             </div>
 
             <div class="mb-3">
+                <label class="form-label">Distance from store (km)</label>
+                <input type="number" min="0" name="address_distance" class="form-control" value="{{ data.address_distance|default:'' }}" placeholder="e.g. 8">
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label">NIN (National ID Number)</label>
                 <input type="text" name="NIN" class="form-control" value="{{ data.NIN|default:'' }}">
             </div>
 
             <div class="mb-4 form-check">
-                <input type="checkbox" name="bought_on_credit" class="form-check-input" id="creditCheck" {% if
-                    data.bought_on_credit %}checked{% endif %}>
+                <input type="checkbox" name="bought_on_credit" class="form-check-input" id="creditCheck" 
+                     {% if data.bought_on_credit %}checked{% endif %}>
                 <label class="form-check-label" for="creditCheck">Debtor</label>
             </div>
 

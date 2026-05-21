@@ -13,18 +13,25 @@
   <form method="post" class="row g-3">
     {% csrf_token %}
 
+    <!-- Customer -->
+    <div class="col-md-6">
+      <label for="customer_name" class="form-label">Customer Name</label>
+      <input type="text" class="form-control" id="customer_name" name="customer_name" required
+        value="{{ data.customer_name|default:'' }}">
+    </div>
+
     <!-- Product Sold -->
     <div class="col-md-6">
       <label for="product_sold" class="form-label">Product Sold</label>
       <select id="product_sold" class="form-select" name="product_sold" required>
         <option value="" disabled selected>Choose product...</option>
-        <option value="cement" {% if data.product_sold=='cement' %}selected{% endif %}>Cement</option>
-        <option value="iron_bars" {% if data.product_sold=='iron_bars' %}selected{% endif %}>Iron Bars</option>
-        <option value="nails" {% if data.product_sold=='nails' %}selected{% endif %}>Nails</option>
-        <option value="wheelbarrows" {% if data.product_sold=='wheelbarrows' %}selected{% endif %}>Wheelbarrows</option>
-        <option value="wire_mesh" {% if data.product_sold=='wire_mesh' %}selected{% endif %}>Wire Mesh</option>
-        <option value="barbed_wire" {% if data.product_sold=='barbed_wire' %}selected{% endif %}>Barbed Wire</option>
-        <option value="iron_sheets" {% if data.product_sold=='iron_sheets' %}selected{% endif %}>Iron Sheets</option>
+        <option value="cement" {% if data.product_sold == 'cement' %}selected{% endif %}>Cement</option>
+        <option value="iron_bars" {% if data.product_sold == 'iron_bars' %}selected{% endif %}>Iron Bars</option>
+        <option value="nails" {% if data.product_sold == 'nails' %}selected{% endif %}>Nails</option>
+        <option value="wheelbarrows" {% if data.product_sold == 'wheelbarrows' %}selected{% endif %}>Wheelbarrows</option>
+        <option value="wire_mesh" {% if data.product_sold == 'wire_mesh' %}selected{% endif %}>Wire Mesh</option>
+        <option value="barbed_wire" {% if data.product_sold == 'barbed_wire' %}selected{% endif %}>Barbed Wire</option>
+        <option value="iron_sheets" {% if data.product_sold == 'iron_sheets' %}selected{% endif %}>Iron Sheets</option>
       </select>
     </div>
 
@@ -34,53 +41,53 @@
       <select id="specification" class="form-select" name="specification">
         <option value="" disabled selected>Choose specification...</option>
         {% if data.product_sold == 'cement' %}
-        <option value="cem_iin" {% if data.specification=='cem_iin' %}selected{% endif %}>CEM IIN</option>
-        <option value="cem_iiin" {% if data.specification=='cem_iiin' %}selected{% endif %}>CEM IIIN</option>
+        <option value="cem_iin" {% if data.specification == 'cem_iin' %}selected{% endif %}>CEM IIN</option>
+        <option value="cem_iiin" {% if data.specification == 'cem_iiin' %}selected{% endif %}>CEM IIIN</option>
         {% elif data.product_sold == 'iron_bars' %}
-        <option value="10mm" {% if data.specification=='10mm' %}selected{% endif %}>10mm</option>
-        <option value="12mm" {% if data.specification=='12mm' %}selected{% endif %}>12mm</option>
-        <option value="16mm" {% if data.specification=='16mm' %}selected{% endif %}>16mm</option>
+        <option value="10mm" {% if data.specification == '10mm' %}selected{% endif %}>10mm</option>
+        <option value="12mm" {% if data.specification == '12mm' %}selected{% endif %}>12mm</option>
+        <option value="16mm" {% if data.specification == '16mm' %}selected{% endif %}>16mm</option>
         {% elif data.product_sold == 'nails' %}
-        <option value="1inch" {% if data.specification=='1inch' %}selected{% endif %}>1 inch</option>
-        <option value="3inch" {% if data.specification=='3inch' %}selected{% endif %}>3 inch</option>
-        <option value="4inch" {% if data.specification=='4inch' %}selected{% endif %}>4 inch</option>
-        <option value="5inch" {% if data.specification=='5inch' %}selected{% endif %}>5 inch</option>
-        <option value="roofing_5kg" {% if data.specification=='roofing_5kg' %}selected{% endif %}>Roofing Nails 5kg
+        <option value="1inch" {% if data.specification == '1inch' %}selected{% endif %}>1 inch</option>
+        <option value="3inch" {% if data.specification == '3inch' %}selected{% endif %}>3 inch</option>
+        <option value="4inch" {% if data.specification == '4inch' %}selected{% endif %}>4 inch</option>
+        <option value="5inch" {% if data.specification == '5inch' %}selected{% endif %}>5 inch</option>
+        <option value="roofing_5kg" {% if data.specification == 'roofing_5kg' %}selected{% endif %}>Roofing Nails 5kg
         </option>
         {% elif data.product_sold == 'barbed_wire' %}
-        <option value="high_tensile" {% if data.specification=='high_tensile' %}selected{% endif %}>High Tensile
+        <option value="high_tensile" {% if data.specification == 'high_tensile' %}selected{% endif %}>High Tensile
         </option>
-        <option value="low_tensile" {% if data.specification=='low_tensile' %}selected{% endif %}>Low Tensile</option>
+        <option value="low_tensile" {% if data.specification == 'low_tensile' %}selected{% endif %}>Low Tensile</option>
         {% elif data.product_sold == 'iron_sheets' %}
-        <option value="gauge_28_red" {% if data.specification=='gauge_28_red' %}selected{% endif %}>Gauge 28 - Red
+        <option value="gauge_28_red" {% if data.specification == 'gauge_28_red' %}selected{% endif %}>Gauge 28 - Red
         </option>
-        <option value="gauge_28_blue" {% if data.specification=='gauge_28_blue' %}selected{% endif %}>Gauge 28 - Blue
+        <option value="gauge_28_blue" {% if data.specification == 'gauge_28_blue' %}selected{% endif %}>Gauge 28 - Blue
         </option>
-        <option value="gauge_28_green" {% if data.specification=='gauge_28_green' %}selected{% endif %}>Gauge 28 - Green
+        <option value="gauge_28_green" {% if data.specification == 'gauge_28_green' %}selected{% endif %}>Gauge 28 - Green
         </option>
-        <option value="gauge_28_brown" {% if data.specification=='gauge_28_brown' %}selected{% endif %}>Gauge 28 - Brown
+        <option value="gauge_28_brown" {% if data.specification == 'gauge_28_brown' %}selected{% endif %}>Gauge 28 - Brown
         </option>
-        <option value="gauge_28_grey" {% if data.specification=='gauge_28_grey' %}selected{% endif %}>Gauge 28 - Grey
+        <option value="gauge_28_grey" {% if data.specification == 'gauge_28_grey' %}selected{% endif %}>Gauge 28 - Grey
         </option>
-        <option value="gauge_30_red" {% if data.specification=='gauge_30_red' %}selected{% endif %}>Gauge 30 - Red
+        <option value="gauge_30_red" {% if data.specification == 'gauge_30_red' %}selected{% endif %}>Gauge 30 - Red
         </option>
-        <option value="gauge_30_blue" {% if data.specification=='gauge_30_blue' %}selected{% endif %}>Gauge 30 - Blue
+        <option value="gauge_30_blue" {% if data.specification == 'gauge_30_blue' %}selected{% endif %}>Gauge 30 - Blue
         </option>
-        <option value="gauge_30_green" {% if data.specification=='gauge_30_green' %}selected{% endif %}>Gauge 30 - Green
+        <option value="gauge_30_green" {% if data.specification == 'gauge_30_green' %}selected{% endif %}>Gauge 30 - Green
         </option>
-        <option value="gauge_30_brown" {% if data.specification=='gauge_30_brown' %}selected{% endif %}>Gauge 30 - Brown
+        <option value="gauge_30_brown" {% if data.specification == 'gauge_30_brown' %}selected{% endif %}>Gauge 30 - Brown
         </option>
-        <option value="gauge_30_grey" {% if data.specification=='gauge_30_grey' %}selected{% endif %}>Gauge 30 - Grey
+        <option value="gauge_30_grey" {% if data.specification == 'gauge_30_grey' %}selected{% endif %}>Gauge 30 - Grey
         </option>
-        <option value="gauge_32_red" {% if data.specification=='gauge_32_red' %}selected{% endif %}>Gauge 32 - Red
+        <option value="gauge_32_red" {% if data.specification == 'gauge_32_red' %}selected{% endif %}>Gauge 32 - Red
         </option>
-        <option value="gauge_32_blue" {% if data.specification=='gauge_32_blue' %}selected{% endif %}>Gauge 32 - Blue
+        <option value="gauge_32_blue" {% if data.specification == 'gauge_32_blue' %}selected{% endif %}>Gauge 32 - Blue
         </option>
-        <option value="gauge_32_green" {% if data.specification=='gauge_32_green' %}selected{% endif %}>Gauge 32 - Green
+        <option value="gauge_32_green" {% if data.specification == 'gauge_32_green' %}selected{% endif %}>Gauge 32 - Green
         </option>
-        <option value="gauge_32_brown" {% if data.specification=='gauge_32_brown' %}selected{% endif %}>Gauge 32 - Brown
+        <option value="gauge_32_brown" {% if data.specification == 'gauge_32_brown' %}selected{% endif %}>Gauge 32 - Brown
         </option>
-        <option value="gauge_32_grey" {% if data.specification=='gauge_32_grey' %}selected{% endif %}>Gauge 32 - Grey
+        <option value="gauge_32_grey" {% if data.specification == 'gauge_32_grey' %}selected{% endif %}>Gauge 32 - Grey
         </option>
         {% endif %}
       </select>
@@ -98,16 +105,65 @@
       <label for="payment_method" class="form-label">Payment Method</label>
       <select id="payment_method" class="form-select" name="payment_method" required>
         <option value="" disabled selected>Choose...</option>
-        <option value="mobile money" {% if data.payment_method=='mobile money' %}selected{% endif %}>Mobile Money
+        <option value="mobile money" {% if data.payment_method == 'mobile money' %}selected{% endif %}>Mobile Money
         </option>
-        <option value="cash" {% if data.payment_method=='cash' %}selected{% endif %}>Cash</option>
-        <option value="bank" {% if data.payment_method=='bank' %}selected{% endif %}>Bank</option>
+        <option value="cash" {% if data.payment_method == 'cash' %}selected{% endif %}>Cash</option>
+        <option value="bank" {% if data.payment_method == 'bank' %}selected{% endif %}>Bank</option>
       </select>
     </div>
 
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary">SAVE SALE</button>
+    <!-- Delivery Option -->
+    <div class="col-md-12">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="delivery" name="delivery" {% if data.delivery == 'on' %}checked{% endif %}>
+        <label class="form-check-label" for="delivery">Delivery</label>
+        <div class="form-text">Select delivery to enable transport. The system auto-calculates the charge.</div>
+      </div>
     </div>
+
+    <div id="delivery-details" class="row g-3" style="display: {% if data.delivery == 'on' %}flex{% else %}none{% endif %}; margin-left: 0; margin-right: 0;">
+      <div class="col-md-6">
+        <label for="address" class="form-label">Delivery Address</label>
+        <input type="text" class="form-control" id="address" name="address"
+          value="{{ data.address|default:'' }}">
+      </div>
+      <div class="col-md-6">
+        <label for="address_distance" class="form-label">Distance (km)</label>
+        <select id="address_distance" class="form-select" name="address_distance">
+          <option value="" disabled {% if not data.address_distance %}selected{% endif %}>Choose distance...</option>
+          <option value="1" {% if data.address_distance == '1' %}selected{% endif %}>1 km</option>
+          <option value="2" {% if data.address_distance == '2' %}selected{% endif %}>2 km</option>
+          <option value="3" {% if data.address_distance == '3' %}selected{% endif %}>3 km</option>
+          <option value="4" {% if data.address_distance == '4' %}selected{% endif %}>4 km</option>
+          <option value="5" {% if data.address_distance == '5' %}selected{% endif %}>5 km</option>
+          <option value="6" {% if data.address_distance == '6' %}selected{% endif %}>6 km</option>
+          <option value="7" {% if data.address_distance == '7' %}selected{% endif %}>7 km</option>
+          <option value="8" {% if data.address_distance == '8' %}selected{% endif %}>8 km</option>
+          <option value="9" {% if data.address_distance == '9' %}selected{% endif %}>9 km</option>
+          <option value="10" {% if data.address_distance == '10' %}selected{% endif %}>10 km</option>
+          <option value="11" {% if data.address_distance == '11' %}selected{% endif %}>11 km</option>
+          <option value="12" {% if data.address_distance == '12' %}selected{% endif %}>12 km</option>
+          <option value="15" {% if data.address_distance == '15' %}selected{% endif %}>15 km</option>
+          <option value="20" {% if data.address_distance == '20' %}selected{% endif %}>20 km</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">SAVE SALE AND ISSUE RECEIPT</button>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var deliveryCheckbox = document.getElementById('delivery');
+        var deliveryDetails = document.getElementById('delivery-details');
+        if (deliveryCheckbox) {
+          deliveryCheckbox.addEventListener('change', function () {
+            deliveryDetails.style.display = this.checked ? 'flex' : 'none';
+          });
+        }
+      });
+    </script>
   </form>
 </div>
 {% endblock %}

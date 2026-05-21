@@ -80,8 +80,10 @@
                     <td>{{ deposit.date }}</td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <a href="{% url 'deposit_receipt' deposit.pk %}" title="Issue Receipt"
-                                class="me-2 text-info">
+                            <a href="{% url 'deposit_progress' deposit.pk %}" title="View Progress" class="me-2 text-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'deposit_receipt' deposit.pk %}" title="Issue Receipt" class="me-2 text-info">
                                 <i class="bi bi-receipt"></i>
                             </a>
                             <a href="{% url 'deposit_edit' deposit.pk %}" title="Edit" class="me-2 text-secondary">

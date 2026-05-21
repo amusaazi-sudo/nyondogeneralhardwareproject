@@ -37,7 +37,7 @@
             Actions</span>
         <div class="d-flex gap-3">
             <a href="{% url 'sales_receipt' %}" class="btn btn-outline-info btn-sm">
-                <i class="bi bi-receipt"></i> Generate Receipt
+                <i class="bi bi-receipt-cutoff"></i> Receipt Records
             </a>
             <a href="{% url 'sales' %}" class="btn btn-outline-dark btn-sm">
                 <i class="bi bi-table"></i> Sales Records
@@ -50,23 +50,23 @@
             <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #64B5F6;">
                 <div class="card-body">
                     <h5 class="card-title text-black">Today's Sales</h5>
-                    <h4 class="text-black">UGX 102,500</h4>
+                    <h4 class="text-black">{{ todays_sales }}</h4>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #64B5F6;">
                 <div class="card-body">
-                    <h5 class="card-title text-black">Weekly Sales</h5>
-                    <h4 class="text-black">UGX 7,000,000</h4>
+                    <h5 class="card-title text-black">Transport Trips</h5>
+                    <h4 class="text-black">{{ transport_trips }}</h4>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card summary-card mb-3" style="border: none; border-top: 4px solid #64B5F6;">
                 <div class="card-body">
-                    <h5 class="card-title text-black">Monthly Sales</h5>
-                    <h4 class="text-black">UGX 30,000,000</h4>
+                    <h5 class="card-title text-black">Total Revenue</h5>
+                    <h4 class="text-black">UGX {{ total_revenue }}</h4>
                 </div>
             </div>
         </div>
@@ -81,11 +81,12 @@
                 <thead>
                     <tr class="text-white">
                         <th>Product Sold</th>
+                        <th>Customer</th>
                         <th>Date</th>
                         <th>Quantity</th>
                         <th>Receipt Number</th>
+                        <th>Transport</th>
                         <th>Payment Method</th>
-                        <th>Alerts</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -93,17 +94,17 @@
                     {% for sale in sales %}
                     <tr>
                         <td class="text-white">{{ sale.product_sold }}</td>
+                        <td class="text-white">{{ sale.customer.name|default:'—' }}</td>
                         <td class="text-white">{{ sale.date }}</td>
                         <td class="text-white">{{ sale.quantity_sold }}</td>
                         <!-- receipt_number comes from the auto-generated Receipt linked to this sale -->
                         <td class="text-white">{{ sale.receipt.receipt_number|default:"—" }}</td>
+                        <td class="text-white">{{ sale.transport_display }}</td>
                         <td class="text-white">{{ sale.payment_method }}</td>
-                        <td><span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Completed</span></td>
                         <td>
-                            <a href="{% url 'sales_edit' sale.pk %}" class="btn btn-sm btn-outline-primary me-1"><i
-                                    class="bi bi-pencil"></i></a>
-                            <a href="{% url 'sales_delete' sale.pk %}" class="btn btn-sm btn-outline-danger"><i
-                                    class="bi bi-trash"></i></a>
+                            <a href="{% url 'sale_receipt' sale.pk %}" class="btn btn-sm btn-outline-success me-1" title="Issue Receipt"><i class="bi bi-receipt"></i></a>
+                            <a href="{% url 'sales_edit' sale.pk %}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                            <a href="{% url 'sales_delete' sale.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
                         </td>
                     </tr>
                     {% empty %}

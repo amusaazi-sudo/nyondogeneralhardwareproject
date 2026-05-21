@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Payment Receipt</h4>
+    <div>
+        <button onclick="window.print()" class="btn btn-primary btn-sm me-2">
+            <i class="bi bi-printer"></i> Print Receipt
+        </button>
+        <a href="{% url 'deposit_progress' receipt.deposit_payment.deposit.pk %}" class="btn btn-secondary btn-sm">Back</a>
+    </div>
+</div>
+
+<!-- Print Styles -->
+<style>
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+            background: white;
+        }
+        .sidebar {
+            display: none !important;
+        }
+        .wrapper {
+            display: block !important;
+        }
+        .content {
+            padding: 0 !important;
+            background: white !important;
+            flex: none !important;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .receipt-container {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 10px !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+        }
+        .receipt-header, .receipt-section {
+            page-break-inside: avoid;
+        }
+    }
+    
+    .receipt-container {
+        max-width: 600px;
+        margin: 0 auto;
+        border: 2px dashed #ccc;
+        padding: 20px;
+        font-family: monospace;
+        background: #fff;
+    }
+    
+    .receipt-header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .receipt-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 3px;
+    }
+    
+    .receipt-subtitle {
+        font-size: 11px;
+        color: #666;
+    }
+    
+    .receipt-number {
+        font-size: 13px;
+        font-weight: bold;
+        margin-top: 8px;
+        color: #004d99;
+    }
+    
+    .receipt-section {
+        margin-bottom: 12px;
+    }
+    
+    .section-label {
+        font-weight: bold;
+        font-size: 11px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 3px;
+        margin-bottom: 6px;
+    }
+    
+    .receipt-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+    
+    .receipt-row-label {
+        font-weight: bold;
+    }
+    
+    .receipt-row-value {
+        text-align: right;
+    }
+    
+    .amount-highlight {
+        font-size: 13px;
+        font-weight: bold;
+        color: #28a745;
+        border-top: 1px solid #333;
+        border-bottom: 2px solid #333;
+        padding: 6px 0;
+        margin: 10px 0;
+    }
+    
+    .receipt-footer {
+        text-align: center;
+        font-size: 10px;
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+    }
+    
+    .footer-text {
+        margin: 3px 0;
+    }
+</style>
+
+<div class="receipt-container">
+    <!-- Header -->
+    <div class="receipt-header">
+        <div class="receipt-title">NYONDO GENERAL HARDWARE</div>
+        <div class="receipt-subtitle"> PAYMENT RECEIPT</div>
+        <div class="receipt-number">{{ receipt.payment_receipt_number }}</div>
+        <div style="font-size: 11px; color: #666; margin-top: 5px;">
+            Issued: {{ receipt.payment_date|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+    
+    <!-- Customer Information -->
+    <div class="receipt-section">
+        <div class="section-label">Customer Information</div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Name:</span>
+            <span class="receipt-row-value">{{ receipt.customer_name }}</span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Phone:</span>
+            <span class="receipt-row-value">{{ receipt.customer_phone }}</span>
+        </div>
+        {% if receipt.customer_nin %}
+        <div class="receipt-row">
+            <span class="receipt-row-label">NIN:</span>
+            <span class="receipt-row-value">{{ receipt.customer_nin }}</span>
+        </div>
+        {% endif %}
+        {% if receipt.customer_address %}
+        <div class="receipt-row">
+            <span class="receipt-row-label">Address:</span>
+            <span class="receipt-row-value">{{ receipt.customer_address|truncatewords:5 }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Deposit Details -->
+    <div class="receipt-section">
+        <div class="section-label">Deposit Scheme Details</div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Deposit Ref:</span>
+            <span class="receipt-row-value">{{ receipt.deposit_receipt_number }}</span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Item:</span>
+            <span class="receipt-row-value">{{ receipt.item_name }}</span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Deposit Amount:</span>
+            <span class="receipt-row-value">UGX {{ receipt.total_deposit_amount|floatformat:0 }}</span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Total Balance Owed:</span>
+            <span class="receipt-row-value">UGX {{ receipt.total_balance_owed|floatformat:0 }}</span>
+        </div>
+    </div>
+    
+    <!-- Payment Details -->
+    <div class="receipt-section">
+        <div class="section-label">Payment Details</div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Payment Method:</span>
+            <span class="receipt-row-value">{{ receipt.payment_method }}</span>
+        </div>
+        <div class="receipt-row">
+            <span class="receipt-row-label">Previous Balance:</span>
+            <span class="receipt-row-value">UGX {{ receipt.balance_before_payment|floatformat:0 }}</span>
+        </div>
+        
+        <!-- Amount Paid Highlight -->
+        <div class="amount-highlight">
+            <div class="receipt-row">
+                <span class="receipt-row-label">AMOUNT PAID:</span>
+                <span class="receipt-row-value">UGX {{ receipt.amount_paid|floatformat:0 }}</span>
+            </div>
+        </div>
+        
+        <div class="receipt-row">
+            <span class="receipt-row-label">New Balance:</span>
+            <span class="receipt-row-value">UGX {{ receipt.balance_after_payment|floatformat:0 }}</span>
+        </div>
+        
+        {% if receipt.note %}
+        <div class="receipt-row">
+            <span class="receipt-row-label">Note:</span>
+            <span class="receipt-row-value">{{ receipt.note }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Footer -->
+    <div class="receipt-footer">
+        <div class="footer-text">Thank you for your payment</div>
+        <div class="footer-text" style="font-size: 10px; margin-top: 10px;">
+            This is a temporary receipt. Keep for your records.
+        </div>
+        <div class="footer-text" style="font-size: 10px; margin-top: 15px;">
+            Receipt generated: {{ receipt.payment_date|date:"d/m/Y H:i:s" }}
+        </div>
+    </div>
+</div>
+
+<!-- No Print Button -->
+<div class="text-center mt-4 no-print">
+    <a href="{% url 'payment_receipts_list' %}" class="btn btn-info btn-sm me-2">View All Receipts</a>
+    <a href="{% url 'deposit_progress' receipt.deposit_payment.deposit.pk %}" class="btn btn-secondary btn-sm">Back to Deposit</a>
+</div>
+
+{% endblock %}

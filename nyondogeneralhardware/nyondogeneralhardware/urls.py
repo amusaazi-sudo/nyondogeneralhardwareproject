@@ -29,6 +29,7 @@ urlpatterns = [
     path("add_sales/", views.add_sales, name="add_sales"),
     path('sales/<int:pk>/edit/', views.sales_edit, name='sales_edit'),
     path('sales/<int:pk>/delete/', views.sales_delete, name='sales_delete'),
+    path('sales/<int:pk>/receipt/', views.sale_receipt, name='sale_receipt'),
     path('sales/receipt/', views.sales_receipt, name='sales_receipt'),
 #stock
 
@@ -59,6 +60,11 @@ urlpatterns = [
     path('deposits/add/', views.add_deposit, name='add_deposit'),
     path('deposits/receipts/', views.deposit_receipts, name='deposit_receipts'),
     path('deposits/<int:pk>/receipt/', views.deposit_receipt, name='deposit_receipt'),
+    path('deposits/<int:pk>/progress/', views.deposit_progress, name='deposit_progress'),
     path('deposits/<int:pk>/edit/', views.deposit_edit, name='deposit_edit'),
     path('deposits/<int:pk>/delete/', views.deposit_delete, name='deposit_delete'),
+    
+    # Payment receipts
+    path('payment-receipt/<int:receipt_id>/', views.payment_receipt, name='payment_receipt'),
+    path('payment-receipts/', views.payment_receipts_list, name='payment_receipts_list'),
 ]

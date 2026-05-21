@@ -13,7 +13,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Sales</h5>
-                <p class="card-text text-black">Total: 120</p>
+                <p class="card-text text-black">Total: {{ sales_count }}</p>
             </div>
         </div>
     </div>
@@ -21,7 +21,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Stock</h5>
-                <p class="card-text text-black">Items: 450</p>
+                <p class="card-text text-black">Items: {{ stock_count }}</p>
             </div>
         </div>
     </div>
@@ -29,7 +29,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Transport</h5>
-                <p class="card-text text-black">Trips: 32</p>
+                <p class="card-text text-black">Trips: {{ transport_count }}</p>
             </div>
         </div>
     </div>
@@ -37,7 +37,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Credit Scheme</h5>
-                <p class="card-text text-black">Active: 15</p>
+                <p class="card-text text-black">Active: {{ credit_count }}</p>
             </div>
         </div>
     </div>
@@ -49,7 +49,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Deposit Scheme</h5>
-                <p class="card-text text-black">Total: UGX 12,245,000</p>
+                <p class="card-text text-black">Total: UGX {{ deposit_scheme_value }}</p>
             </div>
         </div>
     </div>
@@ -57,7 +57,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Receipts</h5>
-                <p class="card-text text-black">Today: 5 receipts</p>
+                <p class="card-text text-black">Today: {{ receipts_today }} receipts</p>
             </div>
         </div>
     </div>
@@ -109,24 +109,18 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for receipt in recent_receipts %}
                         <tr>
-                            <td>#REC-001</td>
-                            <td>John M.</td>
-                            <td>UGX 5,200</td>
-                            <td>2026-05-07</td>
+                            <td>{{ receipt.receipt_number }}</td>
+                            <td>{{ receipt.sale.customer.name|default:'—' }}</td>
+                            <td>UGX {{ receipt.sale.sale_total }}</td>
+                            <td>{{ receipt.issued_on|date:'Y-m-d' }}</td>
                         </tr>
+                        {% empty %}
                         <tr>
-                            <td>#REC-002</td>
-                            <td>Mary W.</td>
-                            <td>UGX 12,800</td>
-                            <td>2026-05-07</td>
+                            <td colspan="4" class="text-center text-muted">No recent receipts.</td>
                         </tr>
-                        <tr>
-                            <td>#REC-003</td>
-                            <td>Peter O.</td>
-                            <td>UGX 3,450</td>
-                            <td>2026-05-06</td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

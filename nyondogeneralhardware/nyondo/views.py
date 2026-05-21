@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.db.models import Sum
 from django.utils import timezone
-from .models import Stock, Sale, Receipt, Supplier, SupplierPayment, Customer, CustomerPayment, Deposit, SCHEME_ITEMS
+from .models import Stock, Sale, Receipt, Supplier, SupplierPayment, Customer, CustomerPayment, Deposit, DepositPayment, DepositPaymentReceipt, SCHEME_ITEMS
 from datetime import date as date_type
 # create your views here
 
@@ -187,12 +187,19 @@ def sales(request):
 def add_sales(request):
     if request.method == "POST":
         payload = request.POST
+        sent_customer_name = payload.get('customer_name', '').strip()
         sent_product_sold = payload.get('product_sold')
         sent_specification = payload.get('specification', '').strip()
         sent_payment_method = payload.get('payment_method')
+        sent_delivery = payload.get('delivery') == 'on'
+        sent_distance = payload.get('address_distance')
+        sent_address = payload.get('address', '').strip()
 
         SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
         errors = []
+
+        if not sent_customer_name:
+            errors.append('Please enter a customer name.')
 
         # validate specification is provided for products that require it
         if sent_product_sold in SPEC_REQUIRED and not sent_specification:
@@ -206,6 +213,19 @@ def add_sales(request):
         except (ValueError, TypeError):
             errors.append('Quantity must be a valid whole number.')
             sent_quantity_sold = None
+
+        if sent_delivery:
+            if not sent_address:
+                errors.append('Please enter the delivery address.')
+            if sent_distance:
+                try:
+                    sent_address_distance = int(sent_distance)
+                    if sent_address_distance < 0:
+                        errors.append('Distance must be zero or greater.')
+                except (ValueError, TypeError):
+                    errors.append('Please select a valid delivery distance.')
+            else:
+                errors.append('Please choose delivery distance.')
 
         if errors:
             for error in errors:
@@ -232,12 +252,27 @@ def add_sales(request):
         stock.quantity -= sent_quantity_sold
         stock.save()
 
+        customer = Customer.objects.filter(name__iexact=sent_customer_name).first()
+        if not customer:
+            customer = Customer.objects.create(
+                name=sent_customer_name,
+                address=sent_address if sent_delivery else None,
+                address_distance=sent_address_distance if sent_delivery else None,
+            )
+        else:
+            if sent_delivery:
+                customer.address = sent_address
+                customer.address_distance = sent_address_distance
+                customer.save()
+
         # save the sale record
         new_sale = Sale(
+            customer=customer,
             product_sold=sent_product_sold,
             specification=sent_specification or None,
             quantity_sold=sent_quantity_sold,
             payment_method=sent_payment_method,
+            delivery=sent_delivery,
         )
         new_sale.save()
 
@@ -280,21 +315,29 @@ def sales_delete(request, pk):
 
 
 def dashboard(request):
-    # Collect summary data from your models
+    today = timezone.now().date()
     sales_count = Sale.objects.count() or 0
-    stock_count = Stock.objects.count()
-   
-    # Example: recent activities (last 5 records)
-    recent_sales = Sale.objects.order_by('-date')[:5]
+    stock_count = Stock.objects.count() or 0
+    transport_count = Sale.objects.filter(delivery=True).count() or 0
+    credit_count = Customer.objects.filter(bought_on_credit=True).count() or 0
+    deposit_scheme_total = Deposit.objects.aggregate(
+        total_amount=Sum('deposit_amount'),
+        total_balance=Sum('total_balance')
+    )
+    deposit_scheme_value = (deposit_scheme_total.get('total_amount') or 0) + (deposit_scheme_total.get('total_balance') or 0)
+    receipts_today = Receipt.objects.filter(issued_on__date=today).count() or 0
+    recent_receipts = Receipt.objects.select_related('sale').order_by('-issued_on')[:5]
 
     context = {
-        "sales_count": sales_count,
-        "stock_count": stock_count,
-        # "transport_count": transport_count,
-        # "credit_count": credit_count,
-        "recent_sales": recent_sales,
+        'sales_count': sales_count,
+        'stock_count': stock_count,
+        'transport_count': transport_count,
+        'credit_count': credit_count,
+        'deposit_scheme_value': deposit_scheme_value,
+        'receipts_today': receipts_today,
+        'recent_receipts': recent_receipts,
     }
-    return render(request, "dashboard.html", context)
+    return render(request, 'dashboard.html', context)
 
 # Shows all auto-generated receipts, newest first
 def sales_receipt(request):
@@ -302,10 +345,26 @@ def sales_receipt(request):
     return render(request, 'sales_receipt.html', {'receipts': receipts})
 
 
+def sale_receipt(request, pk):
+    receipt = get_object_or_404(Receipt, sale_id=pk)
+    return render(request, 'sale_receipt.html', {'receipt': receipt})
+
+
 # Sales dashboard — passes real sale + receipt data to the template
 def sales_dashboard(request):
+    today = timezone.now().date()
     sales = Sale.objects.prefetch_related('receipt').order_by('-date')  # prefetch_related loads receipts efficiently
-    return render(request, 'sales_dashboard.html', {'sales': sales})
+    todays_sales = Sale.objects.filter(date=today).count() or 0
+    transport_trips = Sale.objects.filter(delivery=True).count() or 0
+    total_revenue = sum(s.sale_total for s in sales)
+
+    context = {
+        'sales': sales,
+        'todays_sales': todays_sales,
+        'transport_trips': transport_trips,
+        'total_revenue': total_revenue,
+    }
+    return render(request, 'sales_dashboard.html', context)
 
 def stock_dashboard(request):
     stocks = Stock.objects.all()
@@ -564,6 +623,14 @@ def add_customer(request):
         name = body.get('name', '').strip()
         phone = body.get('phone', '').strip()
 
+        address_distance = None
+        try:
+            address_distance = int(body.get('address_distance')) if body.get('address_distance') else None
+            if address_distance is not None and address_distance < 0:
+                errors.append('Address distance must be zero or greater.')
+        except (ValueError, TypeError):
+            errors.append('Address distance must be a valid integer.')
+
         if not name:
             errors.append('Customer name is required.')
         if not phone:
@@ -579,6 +646,7 @@ def add_customer(request):
             phone=phone,
             email=body.get('email') or None,
             address=body.get('address') or None,
+            address_distance=address_distance,
             NIN=body.get('NIN') or None,
             bought_on_credit=bool(body.get('bought_on_credit')),
         )
@@ -605,10 +673,24 @@ def customer_edit(request, pk):
                 messages.error(request, e)
             return render(request, 'customer_edit.html', {'data': body, 'customer': customer})
 
+        address_distance = None
+        try:
+            address_distance = int(body.get('address_distance')) if body.get('address_distance') else None
+            if address_distance is not None and address_distance < 0:
+                errors.append('Address distance must be zero or greater.')
+        except (ValueError, TypeError):
+            errors.append('Address distance must be a valid integer.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+            return render(request, 'customer_edit.html', {'data': body, 'customer': customer})
+
         customer.name = name
         customer.phone = phone
         customer.email = body.get('email') or None
         customer.address = body.get('address') or None
+        customer.address_distance = address_distance
         customer.NIN = body.get('NIN') or None
         customer.bought_on_credit = bool(body.get('bought_on_credit'))
         customer.save()
@@ -622,6 +704,7 @@ def customer_edit(request, pk):
             'phone': customer.phone,
             'email': customer.email,
             'address': customer.address,
+            'address_distance': customer.address_distance,
             'NIN': customer.NIN,
             'bought_on_credit': customer.bought_on_credit,
         },
@@ -640,39 +723,10 @@ def customer_delete(request, pk):
 
 def customer_view(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
-    deposits = customer.deposit_set.order_by('-date')
-    payments = customer.payments.order_by('-date')
-
-    if request.method == 'POST':
-        errors = []
-        try:
-            amount = int(request.POST.get('amount', '0'))
-            if amount <= 0:
-                errors.append('Payment amount must be greater than zero.')
-        except (ValueError, TypeError):
-            errors.append('Enter a valid whole number for the amount.')
-            amount = 0
-
-        remaining = customer.amount_remaining
-        if not errors and amount > remaining:
-            errors.append(f'Amount exceeds remaining balance of UGX {remaining}.')
-
-        if errors:
-            for e in errors:
-                messages.error(request, e)
-        else:
-            CustomerPayment.objects.create(
-                customer=customer,
-                amount=amount,
-                note=request.POST.get('note', '').strip(),
-            )
-            messages.success(request, 'Payment recorded successfully.')
-            return redirect('customer_view', pk=pk)
-
+    sales = customer.sales.order_by('-date')
     return render(request, 'customer_tracker.html', {
         'customer': customer,
-        'deposits': deposits,
-        'payments': payments,
+        'sales': sales,
     })
 
 
@@ -788,6 +842,66 @@ def deposit_delete(request, pk):
     return render(request, 'deposit_delete.html', {'deposit': deposit})
 
 
+def deposit_progress(request, pk):
+    deposit = get_object_or_404(Deposit, pk=pk)
+    payments = deposit.payments.order_by('-date')
+
+    if request.method == 'POST':
+        errors = []
+        try:
+            amount = int(request.POST.get('amount', '0'))
+            if amount <= 0:
+                errors.append('Payment amount must be greater than zero.')
+        except (ValueError, TypeError):
+            errors.append('Enter a valid whole number for the amount.')
+            amount = 0
+
+        remaining = deposit.amount_remaining
+        if not errors and amount > remaining:
+            errors.append(f'Amount exceeds remaining balance of UGX {remaining}.')
+
+        if errors:
+            for e in errors:
+                messages.error(request, e)
+        else:
+            # Create the deposit payment
+            deposit_payment = DepositPayment.objects.create(
+                deposit=deposit,
+                amount=amount,
+                note=request.POST.get('note', '').strip(),
+            )
+            
+            # Calculate balance tracking
+            balance_before = deposit.amount_remaining
+            balance_after = max(balance_before - amount, 0)
+            
+            # Create temporary receipt for this payment
+            receipt = DepositPaymentReceipt.objects.create(
+                deposit_payment=deposit_payment,
+                customer_name=deposit.customer.name,
+                customer_phone=deposit.contact,
+                customer_nin=deposit.customer.NIN,
+                customer_address=deposit.customer.address,
+                deposit_receipt_number=deposit.receipt_number,
+                item_name=deposit.get_item_display(),
+                amount_paid=amount,
+                payment_method=request.POST.get('note', 'Cash').split()[0] if request.POST.get('note') else 'Cash',
+                balance_before_payment=balance_before,
+                balance_after_payment=balance_after,
+                total_deposit_amount=deposit.deposit_amount,
+                total_balance_owed=deposit.total_balance,
+                note=request.POST.get('note', '').strip(),
+            )
+            
+            messages.success(request, 'Installment payment recorded successfully.')
+            return redirect('payment_receipt', receipt_id=receipt.id)
+
+    return render(request, 'deposit_progress.html', {
+        'deposit': deposit,
+        'payments': payments,
+    })
+
+
 def deposit_receipts(request):
     receipts = Deposit.objects.select_related('customer').order_by('-date')
     return render(request, 'deposit_receipts.html', {'receipts': receipts})
@@ -796,3 +910,51 @@ def deposit_receipts(request):
 def deposit_receipt(request, pk):
     deposit = get_object_or_404(Deposit, pk=pk)
     return render(request, 'deposit_reciept.html', {'deposit': deposit})
+
+
+def payment_receipt(request, receipt_id):
+    """Display temporary receipt issued for a deposit payment"""
+    receipt = get_object_or_404(DepositPaymentReceipt, pk=receipt_id)
+    return render(request, 'payment_receipt.html', {'receipt': receipt})
+
+
+def payment_receipts_list(request):
+    """List all payment receipts with filtering options"""
+    receipts = DepositPaymentReceipt.objects.select_related('deposit_payment__deposit__customer').order_by('-payment_date')
+    
+    # Filter by customer name if provided
+    customer_filter = request.GET.get('customer', '').strip()
+    if customer_filter:
+        receipts = receipts.filter(customer_name__icontains=customer_filter)
+    
+    # Filter by date range if provided
+    from_date = request.GET.get('from_date', '').strip()
+    to_date = request.GET.get('to_date', '').strip()
+    
+    if from_date:
+        from datetime import datetime
+        try:
+            from_datetime = datetime.fromisoformat(from_date)
+            receipts = receipts.filter(payment_date__gte=from_datetime)
+        except (ValueError, TypeError):
+            pass
+    
+    if to_date:
+        from datetime import datetime
+        try:
+            to_datetime = datetime.fromisoformat(to_date)
+            receipts = receipts.filter(payment_date__lte=to_datetime)
+        except (ValueError, TypeError):
+            pass
+    
+    # Calculate totals
+    total_amount_paid = sum(r.amount_paid for r in receipts)
+    
+    context = {
+        'receipts': receipts,
+        'customer_filter': customer_filter,
+        'from_date': from_date,
+        'to_date': to_date,
+        'total_amount_paid': total_amount_paid,
+    }
+    return render(request, 'payment_receipts_list.html', context)
