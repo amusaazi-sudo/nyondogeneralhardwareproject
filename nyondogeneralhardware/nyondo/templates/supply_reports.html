@@ -1,3 +1,6 @@
+<!-- COMMENT-HEADER -->
+<!-- Template: nyondo/templates/supply_reports.html -->
+<!-- Use this template for UI pages and content rendering. -->
 {% extends 'base.html' %}
 {% block content %}
 
@@ -5,8 +8,13 @@
 <div class="card mb-3" style="border:none; border-top:5px solid #64B5F6;">
     <div class="card-body d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Supply Reports</h5>
-        <a href="{% url 'suppliers' %}" class="btn btn-sm btn-outline-secondary"><i
-                class="bi bi-arrow-left me-1"></i>Back</a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary no-print" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print
+            </button>
+            <a href="{% url 'suppliers' %}" class="btn btn-sm btn-outline-secondary no-print"><i
+                    class="bi bi-arrow-left me-1"></i>Back</a>
+        </div>
     </div>
 </div>
 
@@ -95,18 +103,13 @@
                     {% for s in suppliers %}
                     <tr>
                         <td>{{ s.supplier_company }}</td>
-                        <td>{{ s.get_product_display }}{% if s.specification %} — {{ s.get_specification_display }}{%
-                            endif %}</td>
+                        <td>{{ s.get_product_display }}{% if s.specification %} — {{ s.get_specification_display }}{% endif %}</td>
                         <td>{{ s.total_cost }}</td>
                         <td>{{ s.total_paid }}</td>
                         <td>{{ s.amount_owed }}</td>
                         <td style="min-width:100px;">
                             <div class="progress" style="height:14px;">
-                                <div class="progress-bar
-                                    {% if s.payment_status == 'Paid' %}bg-success
-                                    {% elif s.payment_status == 'Partial' %}bg-warning
-                                    {% else %}bg-danger{% endif %}"
-                                    style="width:{% if s.payment_percent == 0 %}5{% else %}{{ s.payment_percent }}{% endif %}%;font-size:0.7rem;">
+                                <div class="progress-bar {% if s.payment_status == 'Paid' %}bg-success{% elif s.payment_status == 'Partial' %}bg-warning{% else %}bg-danger{% endif %}" style="width:{% if s.payment_percent == 0 %}5{% else %}{{ s.payment_percent }}{% endif %}%;font-size:0.7rem;">
                                     {{ s.payment_percent }}%
                                 </div>
                             </div>

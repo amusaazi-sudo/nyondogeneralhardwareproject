@@ -1,3 +1,6 @@
+# COMMENT-HEADER
+# File: nyondogeneralhardware/asgi.py
+# Simple review note: use this file for code logic and Django app behavior.
 """
 ASGI config for nyondogeneralhardware project.
 

@@ -1,3 +1,6 @@
+<!-- COMMENT-HEADER -->
+<!-- Template: nyondo/templates/base.html -->
+<!-- Use this template for UI pages and content rendering. -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -84,6 +87,45 @@
             background-color: #fff !important;
         }
 
+        @media print {
+            .sidebar,
+            .no-print,
+            footer,
+            .btn,
+            a.btn,
+            .card-header .btn {
+                display: none !important;
+            }
+
+            body,
+            .content,
+            .card,
+            .table {
+                background: #fff !important;
+                color: #000 !important;
+            }
+
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #000 !important;
+            }
+
+            .badge {
+                border: 1px solid #000 !important;
+                background: transparent !important;
+                color: #000 !important;
+            }
+
+            .table th,
+            .table td {
+                color: #000 !important;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
         footer {
             margin-top: auto;
             background-color: black;
@@ -122,6 +164,16 @@
                 class="{% if 'deposit' in request.resolver_match.url_name %}active{% endif %}"><i
                     class="bi bi-cash-coin"></i> Deposits</a>
 
+            <a href="{% url 'reports' %}"
+                class="{% if 'report' in request.resolver_match.url_name or request.resolver_match.url_name == 'reports' %}active{% endif %}"><i
+                    class="bi bi-file-earmark-text"></i> Reports</a>
+
+            <hr style="margin: 20px 0; border-color: #444;">
+            
+            <a href="{% url 'logout' %}" style="background-color: #d32f2f; border-radius: 5px;" 
+                onmouseover="this.style.backgroundColor='#b71c1c'" onmouseout="this.style.backgroundColor='#d32f2f'">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
 
         </div>
 

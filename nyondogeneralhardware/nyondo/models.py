@@ -1,3 +1,6 @@
+# COMMENT-HEADER
+# File: nyondo/models.py
+# Simple review note: use this file for code logic and Django app behavior.
 from django.db import models
 
 # Create your models here.
@@ -257,6 +260,7 @@ class DepositPaymentReceipt(models.Model):
     balance_after_payment = models.PositiveIntegerField()
     total_deposit_amount = models.PositiveIntegerField()
     total_balance_owed = models.PositiveIntegerField()
+    note = models.CharField(max_length=200, blank=True)
     
     # Additional info
     note = models.CharField(max_length=200, blank=True)
@@ -312,11 +316,9 @@ class Supplier(models.Model):
 
     @property
     def total_paid(self):
+        if self.pk is None:
+            return 0
         return sum(p.amount for p in self.payments.all())
-
-    @property
-    def amount_remaining(self):
-        return max(self.total_cost - self.total_paid, 0)
 
     @property
     def amount_remaining(self):
@@ -327,6 +329,25 @@ class Supplier(models.Model):
         if self.total_cost == 0:
             return 100
         return min(int((self.total_paid / self.total_cost) * 100), 100)
+
+    def update_payment_status(self):
+        if not self.is_credit or self.total_cost == 0:
+            self.payment_status = 'Paid'
+            self.amount_owed = 0
+            return
+
+        owed = self.total_cost - self.total_paid
+        self.amount_owed = max(owed, 0)
+        if self.total_paid == 0:
+            self.payment_status = 'Pending'
+        elif self.total_paid >= self.total_cost:
+            self.payment_status = 'Paid'
+        else:
+            self.payment_status = 'Partial'
+
+    def save(self, *args, **kwargs):
+        self.update_payment_status()
+        super().save(*args, **kwargs)
 
     def get_specification_display(self):
         all_specs = (
@@ -344,6 +365,11 @@ class SupplierPayment(models.Model):
     amount = models.PositiveIntegerField()
     date = models.DateField(auto_now_add=True)
     note = models.CharField(max_length=200, blank=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.supplier.update_payment_status()
+        self.supplier.save(update_fields=['payment_status', 'amount_owed'])
 
     def __str__(self):
         return f"{self.supplier} - {self.amount}"

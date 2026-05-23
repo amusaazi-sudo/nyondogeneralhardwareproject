@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# COMMENT-HEADER
+# File: manage.py
+# Simple review note: use this file for code logic and Django app behavior.
 """Django's command-line utility for administrative tasks."""
 import os
 import sys

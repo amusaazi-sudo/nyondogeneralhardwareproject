@@ -1,6 +1,9 @@
+# COMMENT-HEADER
+# File: nyondo/views.py
+# Simple review note: use this file for code logic and Django app behavior.
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum
 from django.utils import timezone
 from .models import Stock, Sale, Receipt, Supplier, SupplierPayment, Customer, CustomerPayment, Deposit, DepositPayment, DepositPaymentReceipt, SCHEME_ITEMS
@@ -9,29 +12,36 @@ from datetime import date as date_type
 
 ALLOWED_ROLES = {'sales_manager', 'stock_manager', 'admin'}
 
-# def login_view(request):
-#     if request.method == 'POST':
-#         username = request.POST.get('username', '').strip()
-#         password = request.POST.get('password', '').strip()
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
 
-#         if not username or not password:
-#             messages.error(request, 'Both username and password are required.')
-#             return render(request, 'login.html')
+        if not username or not password:
+            messages.error(request, 'Both username and password are required.')
+            return render(request, 'login.html')
 
-#         user = authenticate(request, username=username, password=password)
-#         if user is None:
-#             messages.error(request, 'Invalid username or password.')
-#             return render(request, 'login.html')
+        user = authenticate(request, username=username, password=password)
+        if user is None:
+            messages.error(request, 'Invalid username or password.')
+            return render(request, 'login.html')
 
-#         user_groups = set(user.groups.values_list('name', flat=True))
-#         if not user_groups.intersection(ALLOWED_ROLES) and not user.is_superuser:
-#             messages.error(request, 'You are not authorised to access this system.')
-#             return render(request, 'login.html')
+        user_groups = set(user.groups.values_list('name', flat=True))
+        if not user_groups.intersection(ALLOWED_ROLES) and not user.is_superuser:
+            messages.error(request, 'You are not authorised to access this system.')
+            return render(request, 'login.html')
 
-#         login(request, user)
-#         return redirect('dashboard')
+        login(request, user)
+        return redirect('dashboard')
 
-#     return render(request, 'login.html')
+    return render(request, 'login.html')
+
+
+def logout_view(request):
+    """Logout the current user and redirect to login page"""
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('login')
 
 
 #STOCK VIEWS
@@ -320,6 +330,7 @@ def dashboard(request):
     stock_count = Stock.objects.count() or 0
     transport_count = Sale.objects.filter(delivery=True).count() or 0
     credit_count = Customer.objects.filter(bought_on_credit=True).count() or 0
+    active_debtors = Deposit.objects.filter(total_balance__gt=0).count() or 0
     deposit_scheme_total = Deposit.objects.aggregate(
         total_amount=Sum('deposit_amount'),
         total_balance=Sum('total_balance')
@@ -327,15 +338,20 @@ def dashboard(request):
     deposit_scheme_value = (deposit_scheme_total.get('total_amount') or 0) + (deposit_scheme_total.get('total_balance') or 0)
     receipts_today = Receipt.objects.filter(issued_on__date=today).count() or 0
     recent_receipts = Receipt.objects.select_related('sale').order_by('-issued_on')[:5]
+    recent_supplier_payments = SupplierPayment.objects.select_related('supplier').order_by('-date')[:5]
+    recent_deposit_payments = DepositPayment.objects.select_related('deposit__customer').order_by('-date')[:5]
 
     context = {
         'sales_count': sales_count,
         'stock_count': stock_count,
         'transport_count': transport_count,
         'credit_count': credit_count,
+        'active_debtors': active_debtors,
         'deposit_scheme_value': deposit_scheme_value,
         'receipts_today': receipts_today,
         'recent_receipts': recent_receipts,
+        'recent_supplier_payments': recent_supplier_payments,
+        'recent_deposit_payments': recent_deposit_payments,
     }
     return render(request, 'dashboard.html', context)
 
@@ -380,6 +396,41 @@ def stock_dashboard(request):
         'out_of_stock_items': out_of_stock_items,
     }
     return render(request, 'stock_dashboard.html', context)
+
+
+def reports(request):
+    """Aggregate domain records and receipts for a reports interface."""
+    sales = Sale.objects.select_related('customer').prefetch_related('receipt').order_by('-date')
+    sales_receipts = Receipt.objects.select_related('sale').order_by('-issued_on')
+    stocks = Stock.objects.all().order_by('-date')
+    suppliers = Supplier.objects.all().order_by('-delivery_date')
+    supplier_payments = SupplierPayment.objects.select_related('supplier').order_by('-date')
+    customers = Customer.objects.all().order_by('-date_registered')
+    customer_payments = CustomerPayment.objects.select_related('customer').order_by('-date')
+    deposits = Deposit.objects.select_related('customer').order_by('-date')
+    deposit_payments = DepositPayment.objects.select_related('deposit').order_by('-date')
+    deposit_payment_receipts = DepositPaymentReceipt.objects.order_by('-payment_date')
+
+    context = {
+        'sales': sales,
+        'sales_receipts': sales_receipts,
+        'stocks': stocks,
+        'suppliers': suppliers,
+        'supplier_payments': supplier_payments,
+        'customers': customers,
+        'customer_payments': customer_payments,
+        'deposits': deposits,
+        'deposit_payments': deposit_payments,
+        'deposit_payment_receipts': deposit_payment_receipts,
+        'sales_total': sum(s.sale_total for s in sales),
+        'stock_value': sum(st.quantity * st.selling_price for st in stocks),
+        'supplier_amount_owed': sum(s.amount_remaining for s in suppliers),
+        'customer_amount_owed': sum(c.amount_remaining for c in customers),
+        'deposit_amount_outstanding': sum(d.amount_remaining for d in deposits),
+        'supplier_payment_total': sum(p.amount for p in supplier_payments),
+        'customer_payment_total': sum(p.amount for p in customer_payments),
+    }
+    return render(request, 'reports.html', context)
 
 
 # SUPPLIER VIEWS
@@ -769,16 +820,27 @@ def add_deposit(request):
         except (ValueError, TypeError):
             errors.append('Please enter a valid expiry date.')
             expiry_date = None
-        if not body.get('customer'):
-            errors.append('Please select a customer.')
+        customer_manual = (body.get('customer_manual') or '').strip()
+        customer_field = body.get('customer')
+        if not customer_field and not customer_manual:
+            errors.append('Please select or enter a customer.')
         if not body.get('contact', '').strip():
             errors.append('Contact is required.')
         if errors:
             for e in errors:
                 messages.error(request, e)
             return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS, 'data': body})
+        # determine customer object: prefer manual name if provided
+        if customer_manual:
+            customer_obj, created = Customer.objects.get_or_create(name=customer_manual)
+        else:
+            try:
+                customer_obj = Customer.objects.get(pk=customer_field)
+            except Customer.DoesNotExist:
+                messages.error(request, 'Selected customer was not found.')
+                return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS, 'data': body})
         Deposit.objects.create(
-            customer=get_object_or_404(Customer, pk=body.get('customer')),
+            customer=customer_obj,
             item=body.get('item'),
             NIN=body.get('NIN') or None,
             contact=body.get('contact', '').strip(),

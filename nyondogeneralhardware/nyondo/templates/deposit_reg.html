@@ -1,3 +1,6 @@
+<!-- COMMENT-HEADER -->
+<!-- Template: nyondo/templates/deposit_reg.html -->
+<!-- Use this template for UI pages and content rendering. -->
 {% extends 'base.html' %}
 {% block content %}
 
@@ -25,20 +28,21 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Customer</label>
-                    <select name="customer" class="form-select" required>
+                    <select name="customer" class="form-select">
                         <option value="">— Select Customer —</option>
                         {% for c in customers %}
-                        <option value="{{ c.pk }}" {% if data.customer==c.pk|stringformat:"s" %}selected{% endif %}>{{
-                            c.name }}</option>
+                        <option value="{{ c.pk }}" {% if data.customer|stringformat:"s" == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
                         {% endfor %}
                     </select>
+                    <small class="text-muted">Or enter a new customer name below</small>
+                    <input type="text" name="customer_manual" class="form-control mt-2" placeholder="Enter customer name" value="{{ data.customer_manual|default:'' }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Item</label>
                     <select name="item" class="form-select" required>
                         <option value="">— Select Item —</option>
                         {% for val, label in scheme_items %}
-                        <option value="{{ val }}" {% if data.item==val %}selected{% endif %}>{{ label }}</option>
+                        <option value="{{ val }}" {% if data.item|stringformat:"s" == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>

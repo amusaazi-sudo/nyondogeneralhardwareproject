@@ -1,3 +1,6 @@
+<!-- COMMENT-HEADER -->
+<!-- Template: nyondo/templates/deposit_edit.html -->
+<!-- Use this template for UI pages and content rendering. -->
 {% extends 'base.html' %}
 {% block content %}
 
@@ -24,7 +27,7 @@
                     <label class="form-label fw-bold">Customer</label>
                     <select name="customer" class="form-select" required>
                         {% for c in customers %}
-                        <option value="{{ c.pk }}" {% if deposit.customer.pk==c.pk %}selected{% endif %}>{{ c.name }}
+                        <option value="{{ c.pk }}" {% if deposit.customer.pk == c.pk %}selected{% endif %}>{{ c.name }}
                         </option>
                         {% endfor %}
                     </select>
@@ -33,7 +36,7 @@
                     <label class="form-label fw-bold">Item</label>
                     <select name="item" class="form-select" required>
                         {% for val, label in scheme_items %}
-                        <option value="{{ val }}" {% if deposit.item==val %}selected{% endif %}>{{ label }}</option>
+                        <option value="{{ val }}" {% if deposit.item == val %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
                 </div>

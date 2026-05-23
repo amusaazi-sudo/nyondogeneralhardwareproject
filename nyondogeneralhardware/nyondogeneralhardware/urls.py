@@ -1,3 +1,6 @@
+# COMMENT-HEADER
+# File: nyondogeneralhardware/urls.py
+# Simple review note: use this file for code logic and Django app behavior.
 """
 URL configuration for nyondogeneralhardware project.
 
@@ -21,7 +24,8 @@ from nyondo import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # path('login/', views.login_view, name='login'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
 
     path("", views.dashboard, name="dashboard"),
     path("sales/", views.sales_dashboard, name="sales_dashboard"),
@@ -67,4 +71,5 @@ urlpatterns = [
     # Payment receipts
     path('payment-receipt/<int:receipt_id>/', views.payment_receipt, name='payment_receipt'),
     path('payment-receipts/', views.payment_receipts_list, name='payment_receipts_list'),
+    path('reports/', views.reports, name='reports'),
 ]

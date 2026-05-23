@@ -1,3 +1,6 @@
+# COMMENT-HEADER
+# File: nyondogeneralhardware/wsgi.py
+# Simple review note: use this file for code logic and Django app behavior.
 """
 WSGI config for nyondogeneralhardware project.
 

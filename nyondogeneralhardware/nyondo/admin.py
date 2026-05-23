@@ -1,3 +1,6 @@
+# COMMENT-HEADER
+# File: nyondo/admin.py
+# Simple review note: use this file for code logic and Django app behavior.
 from django.contrib import admin
 from .models import (
     Stock, Sale, Receipt, Customer, Deposit, DepositPayment, 

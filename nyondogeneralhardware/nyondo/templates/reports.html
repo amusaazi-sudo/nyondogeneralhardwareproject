@@ -1,0 +1,270 @@
+<!-- COMMENT-HEADER -->
+<!-- Template: nyondo/templates/reports.html -->
+<!-- Use this template for UI pages and content rendering. -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+	<h3 class="mb-3">Reports</h3>
+	<div class="mb-3 no-print">
+		<button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+			<i class="bi bi-printer me-1"></i> Print Report
+		</button>
+		<span class="text-muted ms-3">Showing a concise summary of the latest records for easier review.</span>
+	</div>
+	<div class="row mb-4 g-3">
+		<div class="col-12 col-md-6 col-lg-3">
+			<div class="card p-3 border-start border-4 border-primary">
+				<h6 class="card-title">Sales Value</h6>
+				<p class="mb-0">UGX {{ sales_total|default:0 }}</p>
+			</div>
+		</div>
+		<div class="col-12 col-md-6 col-lg-3">
+			<div class="card p-3 border-start border-4 border-success">
+				<h6 class="card-title">Stock Value</h6>
+				<p class="mb-0">UGX {{ stock_value|default:0 }}</p>
+			</div>
+		</div>
+		<div class="col-12 col-md-6 col-lg-3">
+			<div class="card p-3 border-start border-4 border-warning">
+				<h6 class="card-title">Supplier Owed</h6>
+				<p class="mb-0">UGX {{ supplier_amount_owed|default:0 }}</p>
+			</div>
+		</div>
+		<div class="col-12 col-md-6 col-lg-3">
+			<div class="card p-3 border-start border-4 border-danger">
+				<h6 class="card-title">Deposit Outstanding</h6>
+				<p class="mb-0">UGX {{ deposit_amount_outstanding|default:0 }}</p>
+			</div>
+		</div>
+	</div>
+	<div class="row g-3">
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Sales ({{ sales.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if sales %}
+						{% for s in sales|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ s.product_sold }}</strong> — {{ s.quantity_sold }} pcs
+							<div class="small text-muted">Customer: {% if s.customer %}{{ s.customer.name }}{% else %}Walk-in{% endif %} • Date: {{ s.date }} • Receipt: {% if s.receipt %}<a href="{% url 'sale_receipt' s.pk %}">{{ s.receipt.receipt_number }}</a>{% else %}—{% endif %}</div>
+						</li>
+						{% endfor %}
+						{% if sales.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ sales.count }} sales.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No sales found.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Sales Receipts ({{ sales_receipts.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if sales_receipts %}
+						{% for r in sales_receipts|slice:":5" %}
+						<li class="list-group-item">
+							<a href="{% url 'sale_receipt' r.sale.pk %}">{{ r.receipt_number }}</a>
+							<div class="small text-muted">Issued: {{ r.issued_on|date:'Y-m-d H:i' }} • Sale: {{ r.sale.product_sold }}</div>
+						</li>
+						{% endfor %}
+						{% if sales_receipts.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ sales_receipts.count }} receipts.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No receipts found.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Stocks ({{ stocks.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if stocks %}
+						{% for stock in stocks|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ stock.get_product_name_display|default:stock.product_name }}</strong>
+							<div class="small text-muted">Spec: {{ stock.specification }} • Qty: {{ stock.quantity }} • Price: {{ stock.selling_price }}</div>
+						</li>
+						{% endfor %}
+						{% if stocks.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ stocks.count }} stock records.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No stock records.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Suppliers ({{ suppliers.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if suppliers %}
+						{% for sup in suppliers|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ sup.supplier_company }}</strong> — {{ sup.product }}
+							<div class="small text-muted">Contact: {{ sup.phone }} • Delivery: {{ sup.delivery_date }} • Status: {{ sup.payment_status }}</div>
+						</li>
+						{% endfor %}
+						{% if suppliers.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ suppliers.count }} suppliers.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No suppliers.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Supplier Payments ({{ supplier_payments.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if supplier_payments %}
+						{% for p in supplier_payments|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ p.supplier.supplier_company }}</strong> — UGX {{ p.amount }}
+							<div class="small text-muted">Date: {{ p.date }} • Note: {{ p.note }}</div>
+						</li>
+						{% endfor %}
+						{% if supplier_payments.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ supplier_payments.count }} supplier payments.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No supplier payments.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Customers ({{ customers.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if customers %}
+						{% for c in customers|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ c.name }}</strong>
+							<div class="small text-muted">Phone: {{ c.phone }} • Registered: {{ c.date_registered }} • Status: {{ c.payment_status }}</div>
+						</li>
+						{% endfor %}
+						{% if customers.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ customers.count }} customers.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No customers.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Customer Payments ({{ customer_payments.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if customer_payments %}
+						{% for cp in customer_payments|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ cp.customer.name }}</strong> — UGX {{ cp.amount }}
+							<div class="small text-muted">Date: {{ cp.date }}</div>
+						</li>
+						{% endfor %}
+						{% if customer_payments.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ customer_payments.count }} customer payments.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No customer payments.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Deposits ({{ deposits.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if deposits %}
+						{% for d in deposits|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ d.receipt_number }}</strong> — {{ d.get_item_display }}
+							<div class="small text-muted">Customer: {{ d.customer.name }} • Amount: UGX {{ d.deposit_amount }} • Due: UGX {{ d.total_balance }}</div>
+						</li>
+						{% endfor %}
+						{% if deposits.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ deposits.count }} deposits.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No deposits.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12 col-md-6 col-lg-4">
+			<div class="card p-3">
+				<h5 class="card-title">Deposit Payments ({{ deposit_payments.count }})</h5>
+				<ul class="list-group list-group-flush">
+					{% if deposit_payments %}
+						{% for dp in deposit_payments|slice:":5" %}
+						<li class="list-group-item">
+							<strong>{{ dp.deposit.receipt_number }}</strong> — UGX {{ dp.amount }}
+							<div class="small text-muted">Date: {{ dp.date }} • Note: {{ dp.note }}</div>
+						</li>
+						{% endfor %}
+						{% if deposit_payments.count > 5 %}
+						<li class="list-group-item text-center small text-muted">Showing latest 5 of {{ deposit_payments.count }} deposit payments.</li>
+						{% endif %}
+					{% else %}
+						<li class="list-group-item">No deposit payments.</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="col-12">
+			<div class="card p-3">
+				<h5 class="card-title">Deposit Payment Receipts ({{ deposit_payment_receipts.count }})</h5>
+				<div class="table-responsive">
+					<table class="table table-sm">
+						<thead>
+							<tr>
+								<th>Receipt</th>
+								<th>Customer</th>
+								<th>Amount</th>
+								<th>Date</th>
+								<th class="no-print"></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% if deposit_payment_receipts %}
+							{% for r in deposit_payment_receipts|slice:":10" %}
+							<tr>
+								<td>{{ r.payment_receipt_number }}</td>
+								<td>{{ r.customer_name }}</td>
+								<td>UGX {{ r.amount_paid }}</td>
+								<td>{{ r.payment_date|date:'Y-m-d H:i' }}</td>
+								<td class="no-print"><a class="btn btn-sm btn-outline-primary" href="{% url 'payment_receipt' r.pk %}">View</a></td>
+							</tr>
+							{% endfor %}
+							{% if deposit_payment_receipts.count > 10 %}
+							<tr><td colspan="5" class="text-center small text-muted">Showing latest 10 of {{ deposit_payment_receipts.count }} payment receipts.</td></tr>
+							{% endif %}
+							{% else %}
+							<tr><td colspan="5">No payment receipts.</td></tr>
+							{% endif %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
