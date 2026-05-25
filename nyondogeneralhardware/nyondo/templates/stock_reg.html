@@ -13,7 +13,7 @@
   <div class="alert alert-{{ message.tags }}">{{ message }}</div>
   {% endfor %}
 
-  <form method="post" class="row g-3">
+  <form method="post" class="row g-3" novalidate>
     {% csrf_token %}
 
     <!-- Product Name -->
@@ -110,28 +110,29 @@
     <!-- Quantity -->
     <div class="col-md-6">
       <label for="quantity" class="form-label">Quantity</label>
-      <input type="number" class="form-control" id="quantity" name="quantity" required
+      <input type="number" min="0" step="1" class="form-control" id="quantity" name="quantity" required
         value="{{ data.quantity|default:'' }}">
     </div>
 
     <!-- Buying Price -->
     <div class="col-md-6">
       <label for="buying_price" class="form-label">Buying Price</label>
-      <input type="number" class="form-control" id="buying_price" name="buying_price" required
+      <input type="number" min="1" step="1" class="form-control" id="buying_price" name="buying_price" required
         value="{{ data.buying_price|default:'' }}">
     </div>
 
     <!-- Selling Price -->
     <div class="col-md-6">
       <label for="selling_price" class="form-label">Selling Price</label>
-      <input type="number" class="form-control" id="selling_price" name="selling_price" required
+      <input type="number" min="0" step="1" class="form-control" id="selling_price" name="selling_price" required
         value="{{ data.selling_price|default:'' }}">
     </div>
 
     <!-- Date -->
     <div class="col-md-6">
       <label for="date" class="form-label">Date</label>
-      <input type="date" class="form-control" id="date" name="date" required value="{{ data.date|default:'' }}">
+      <input type="date" class="form-control" id="date" name="date" required
+        value="{{ data.date|default:today_date }}" min="{{ today_date }}" max="{{ today_date }}">
     </div>
 
     <div class="col-12">

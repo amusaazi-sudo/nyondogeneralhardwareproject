@@ -39,6 +39,11 @@ class Stock(models.Model):
     def __str__(self):
         return self.product_name
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['product_name', 'specification'], name='unique_stock_item_specification'),
+        ]
+
 
 # Stores each sale transaction
 class Sale(models.Model):
@@ -123,7 +128,7 @@ class Customer(models.Model):
     email = models.EmailField(blank=True, null=True)
     address = models.CharField(max_length=200, blank=True, null=True)
     address_distance = models.PositiveIntegerField(blank=True, null=True, help_text='Distance from store in km')
-    NIN = models.CharField(max_length=50, blank=True, null=True)
+    NIN = models.CharField(max_length=15, blank=True, null=True, unique=True)
     date_registered = models.DateField(auto_now_add=True)
     bought_on_credit = models.BooleanField(default=False)
 
@@ -373,3 +378,20 @@ class SupplierPayment(models.Model):
 
     def __str__(self):
         return f"{self.supplier} - {self.amount}"
+
+
+class SupplierReceipt(models.Model):
+    supplier = models.OneToOneField(Supplier, on_delete=models.CASCADE, related_name='receipt')
+    receipt_number = models.CharField(max_length=30, unique=True, editable=False)
+    issued_on = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.receipt_number:
+            super().save(*args, **kwargs)
+            self.receipt_number = f'SUP-REC-{self.pk:06d}'
+            SupplierReceipt.objects.filter(pk=self.pk).update(receipt_number=self.receipt_number)
+        else:
+            super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.receipt_number} - {self.supplier.supplier_company}"

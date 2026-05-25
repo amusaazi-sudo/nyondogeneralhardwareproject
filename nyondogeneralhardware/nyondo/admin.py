@@ -4,7 +4,7 @@
 from django.contrib import admin
 from .models import (
     Stock, Sale, Receipt, Customer, Deposit, DepositPayment, 
-    DepositPaymentReceipt, CustomerPayment, Supplier, SupplierPayment
+    DepositPaymentReceipt, CustomerPayment, Supplier, SupplierPayment, SupplierReceipt
 )
 
 # Register your models here.
@@ -41,4 +41,12 @@ class DepositPaymentAdmin(admin.ModelAdmin):
     list_filter = ('date',)
     search_fields = ('deposit__receipt_number', 'deposit__customer__name')
     readonly_fields = ('date',)
+
+
+@admin.register(SupplierReceipt)
+class SupplierReceiptAdmin(admin.ModelAdmin):
+    list_display = ('receipt_number', 'supplier', 'issued_on')
+    list_filter = ('issued_on',)
+    search_fields = ('receipt_number', 'supplier__supplier_company', 'supplier__name')
+    readonly_fields = ('receipt_number', 'issued_on')
 

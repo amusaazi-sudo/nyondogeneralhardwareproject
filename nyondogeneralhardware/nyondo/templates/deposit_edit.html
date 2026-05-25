@@ -5,6 +5,7 @@
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-sm">Back to Dashboard</a>
     <h4 class="mb-0">Edit Deposit — <span class="text-muted">{{ deposit.receipt_number }}</span></h4>
     <a href="{% url 'deposits' %}" class="btn btn-secondary btn-sm">← Back</a>
 </div>
@@ -20,7 +21,7 @@
 
 <div class="card shadow-sm" style="max-width: 650px;">
     <div class="card-body">
-        <form method="POST">
+        <form method="POST" novalidate>
             {% csrf_token %}
             <div class="row g-3">
                 <div class="col-md-6">
@@ -42,11 +43,11 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Contact</label>
-                    <input type="text" name="contact" class="form-control" value="{{ deposit.contact }}" required>
+                    <input type="text" name="contact" class="form-control" value="{{ deposit.contact }}" pattern="\+2567[0-9]{8}" placeholder="+2567XXXXXXXX" required>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label fw-bold">NIN <span class="text-muted fw-normal">(optional)</span></label>
-                    <input type="text" name="NIN" class="form-control" value="{{ deposit.NIN|default:'' }}">
+                    <label class="form-label fw-bold">NIN</label>
+                    <input type="text" name="NIN" class="form-control" value="{{ deposit.NIN|default:'' }}" pattern="[0-9]{13}" maxlength="13" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Deposit Amount (UGX)</label>

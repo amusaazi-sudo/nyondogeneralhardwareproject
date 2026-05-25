@@ -6,11 +6,71 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.db.models import Sum
 from django.utils import timezone
-from .models import Stock, Sale, Receipt, Supplier, SupplierPayment, Customer, CustomerPayment, Deposit, DepositPayment, DepositPaymentReceipt, SCHEME_ITEMS
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from .models import Stock, Sale, Receipt, Supplier, SupplierPayment, SupplierReceipt, Customer, CustomerPayment, Deposit, DepositPayment, DepositPaymentReceipt, SCHEME_ITEMS
 from datetime import date as date_type
+import re
 # create your views here
 
 ALLOWED_ROLES = {'sales_manager', 'stock_manager', 'admin'}
+SPEC_CHOICES = {
+    'cement': {'cem_iin', 'cem_iiin'},
+    'iron_bars': {'10mm', '12mm', '16mm'},
+    'nails': {'1inch', '3inch', '4inch', '5inch', 'roofing_5kg'},
+    'barbed_wire': {'high_tensile', 'low_tensile'},
+    'iron_sheets': {
+        f'{gauge}_{color}'
+        for gauge in ('gauge_28', 'gauge_30', 'gauge_32')
+        for color in ('red', 'blue', 'green', 'brown', 'grey')
+    },
+}
+SPEC_REQUIRED = set(SPEC_CHOICES)
+CUSTOMER_NAME_RE = re.compile(r"^[A-Za-z][A-Za-z\s'.-]*$")
+UG_PHONE_RE = re.compile(r'^\+2567\d{8}$')
+NIN_RE = re.compile(r'^\d{13}$')
+
+
+def validate_product_spec(product, specification, errors):
+    if product in SPEC_REQUIRED and not specification:
+        errors.append('Please select a gauge/size for the chosen product.')
+        return
+    if specification and specification not in SPEC_CHOICES.get(product, set()):
+        errors.append('Selected gauge/size is not allowed for the chosen product.')
+
+
+def validate_customer_identity(name, phone, nin, email, errors, customer_id=None, require_nin=False):
+    if not name:
+        errors.append('Customer name is required.')
+    elif not CUSTOMER_NAME_RE.match(name) or any(char.isdigit() for char in name):
+        errors.append('Customer name must contain letters only, with no numbers.')
+
+    if not phone:
+        errors.append('Phone number is required.')
+    elif not UG_PHONE_RE.match(phone):
+        errors.append('Phone number must use Ugandan format +2567XXXXXXXX.')
+
+    if require_nin and not nin:
+        errors.append('NIN is required.')
+    if nin:
+        # Check if NIN is alphanumeric and max 15 characters
+        if len(nin) > 15:
+            errors.append('NIN must be maximum 15 characters long.')
+        elif not nin.isalnum():
+            errors.append('NIN must contain only letters and numbers (alphanumeric).')
+        else:
+            # Check for duplicate NIN
+            nin_matches = Customer.objects.filter(NIN=nin)
+        if customer_id:
+            nin_matches = nin_matches.exclude(pk=customer_id)
+        if nin_matches.exists():
+            errors.append('NIN is already registered to another customer.')
+
+    if email:
+        try:
+            validate_email(email)
+        except ValidationError:
+            errors.append('Email address must be valid.')
 
 def login_view(request):
     if request.method == 'POST':
@@ -53,6 +113,7 @@ def stocks (request):
     return render(request, 'stock.html', context)
 
 def add_stock (request):
+    today = timezone.now().date()
     if request.method == "POST":
         body = request.POST
         sent_product_name = body.get('product_name')
@@ -66,40 +127,44 @@ def add_stock (request):
 
         # collect all validation errors before saving
         errors = []
-        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
-        if sent_product_name in SPEC_REQUIRED and not sent_specification:
-            errors.append('Please select a specification for the chosen product.')
+        validate_product_spec(sent_product_name, sent_specification, errors)
 
         # validate quantity is a whole positive number
         try:
             sent_quantity = int(sent_quantity)
             if sent_quantity < 0:
-                errors.append('Quantity must be a positive number.')
+                errors.append('Quantity must be zero or greater.')
         except (ValueError, TypeError):
             errors.append('Quantity must be a valid whole number.')
 
         # validate buying price is a positive number
         try:
             sent_buying_price = int(sent_buying_price)
-            if sent_buying_price < 0:
-                errors.append('Buying price must be a positive number.')
+            if sent_buying_price <= 0:
+                errors.append('Unit cost must be greater than zero.')
         except (ValueError, TypeError):
-            errors.append('Buying price must be a valid number.')
+            errors.append('Unit cost must be a valid number.')
 
         # validate selling price is a positive number
         try:
             sent_selling_price = int(sent_selling_price)
             if sent_selling_price < 0:
-                errors.append('Selling price must be a positive number.')
+                errors.append('Selling price cannot be negative.')
         except (ValueError, TypeError):
             errors.append('Selling price must be a valid number.')
 
-        # validate date is not in the future
+        if not errors and sent_selling_price < sent_buying_price:
+            errors.append('Selling price must be greater than or equal to unit cost.')
+
+        if Stock.objects.filter(product_name=sent_product_name, specification=sent_specification or None).exists():
+            errors.append('This stock item already exists.')
+
+        # Stock orders must be recorded for today's date only.
         try:
             from datetime import date as date_type
             parsed_date = date_type.fromisoformat(sent_date)
-            if parsed_date > timezone.now().date():
-                errors.append('Date cannot be in the future.')
+            if parsed_date != today:
+                errors.append('Stock order date must be today.')
         except (ValueError, TypeError):
             errors.append('Please enter a valid date.')
 
@@ -107,7 +172,7 @@ def add_stock (request):
         if errors:
             for error in errors:
                 messages.error(request, error)
-            return render(request, 'stock_reg.html', {'data': body})
+            return render(request, 'stock_reg.html', {'data': body, 'today_date': today.isoformat()})
 
         new_stock = Stock()
         new_stock.product_name = sent_product_name
@@ -122,23 +187,22 @@ def add_stock (request):
 
         messages.success(request, 'Stock added successfully.')
         return redirect('stocks')
-    return render(request, 'stock_reg.html')
+    return render(request, 'stock_reg.html', {'today_date': today.isoformat()})
 
 def stock_edit(request, pk):
     stock = get_object_or_404(Stock, pk=pk)
+    today = timezone.now().date()
     if request.method == "POST":
         body = request.POST
         errors = []
 
         sent_date = body.get('date')
-        # validate date is not in the future and not before the original record date
+        # Stock orders must be recorded for today's date only.
         try:
             from datetime import date as date_type
             parsed_date = date_type.fromisoformat(sent_date)
-            if parsed_date > timezone.now().date():
-                errors.append('Date cannot be in the future.')
-            if parsed_date < stock.date:
-                errors.append('Date cannot be earlier than the original record date.')
+            if parsed_date != today:
+                errors.append('Stock order date must be today.')
         except (ValueError, TypeError):
             errors.append('Please enter a valid date.')
 
@@ -146,27 +210,58 @@ def stock_edit(request, pk):
         if errors:
             for error in errors:
                 messages.error(request, error)
-            return render(request, 'stock_edit.html', {'stock': stock})
+            return render(request, 'stock_edit.html', {'stock': stock, 'today_date': today.isoformat()})
 
+        sent_product_name = body.get('product_name')
         sent_specification = body.get('specification', '').strip()
-        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
-        if body.get('product_name') in SPEC_REQUIRED and not sent_specification:
-            errors.append('Please select a specification for the chosen product.')
+        validate_product_spec(sent_product_name, sent_specification, errors)
+
+        try:
+            sent_quantity = int(body.get('quantity'))
+            if sent_quantity < 0:
+                errors.append('Quantity must be zero or greater.')
+        except (ValueError, TypeError):
+            errors.append('Quantity must be a valid whole number.')
+            sent_quantity = None
+
+        try:
+            sent_buying_price = int(body.get('buying_price'))
+            if sent_buying_price <= 0:
+                errors.append('Unit cost must be greater than zero.')
+        except (ValueError, TypeError):
+            errors.append('Unit cost must be a valid number.')
+            sent_buying_price = None
+
+        try:
+            sent_selling_price = int(body.get('selling_price'))
+            if sent_selling_price < 0:
+                errors.append('Selling price cannot be negative.')
+        except (ValueError, TypeError):
+            errors.append('Selling price must be a valid number.')
+            sent_selling_price = None
+
+        if sent_buying_price is not None and sent_selling_price is not None and sent_selling_price < sent_buying_price:
+            errors.append('Selling price must be greater than or equal to unit cost.')
+
+        duplicate_stock = Stock.objects.filter(product_name=sent_product_name, specification=sent_specification or None).exclude(pk=stock.pk)
+        if duplicate_stock.exists():
+            errors.append('This stock item already exists.')
+
         if errors:
             for error in errors:
                 messages.error(request, error)
-            return render(request, 'stock_edit.html', {'stock': stock})
-        stock.product_name = body.get('product_name')
+            return render(request, 'stock_edit.html', {'stock': stock, 'today_date': today.isoformat()})
+        stock.product_name = sent_product_name
         stock.specification = sent_specification or None
         stock.product_code = body.get('product_code')
         stock.category = body.get('category')
-        stock.quantity = body.get('quantity')
-        stock.buying_price = body.get('buying_price')
-        stock.selling_price = body.get('selling_price')
+        stock.quantity = sent_quantity
+        stock.buying_price = sent_buying_price
+        stock.selling_price = sent_selling_price
         stock.date = parsed_date
         stock.save()
         return redirect('stocks')
-    return render(request, 'stock_edit.html', {"stock": stock})
+    return render(request, 'stock_edit.html', {"stock": stock, 'today_date': today.isoformat()})
 
 def stock_delete(request, pk):
     stock = get_object_or_404(Stock, pk=pk)
@@ -205,15 +300,14 @@ def add_sales(request):
         sent_distance = payload.get('address_distance')
         sent_address = payload.get('address', '').strip()
 
-        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
         errors = []
 
         if not sent_customer_name:
             errors.append('Please enter a customer name.')
+        elif not CUSTOMER_NAME_RE.match(sent_customer_name) or any(char.isdigit() for char in sent_customer_name):
+            errors.append('Customer name must contain letters only, with no numbers.')
 
-        # validate specification is provided for products that require it
-        if sent_product_sold in SPEC_REQUIRED and not sent_specification:
-            errors.append('Please select a specification for the chosen product.')
+        validate_product_spec(sent_product_sold, sent_specification, errors)
 
         # validate quantity is a positive whole number
         try:
@@ -299,17 +393,37 @@ def sales_edit(request, pk):
         payload = request.POST
         sent_product_sold = payload.get('product_sold')
         sent_specification = payload.get('specification', '').strip()
-        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
         errors = []
-        if sent_product_sold in SPEC_REQUIRED and not sent_specification:
-            errors.append('Please select a specification for the chosen product.')
+        validate_product_spec(sent_product_sold, sent_specification, errors)
+        try:
+            sent_quantity_sold = int(payload.get('quantity_sold'))
+            if sent_quantity_sold <= 0:
+                errors.append('Quantity must be a positive number.')
+        except (ValueError, TypeError):
+            errors.append('Quantity must be a valid whole number.')
+            sent_quantity_sold = None
+
+        if sent_quantity_sold is not None:
+            stock = Stock.objects.filter(
+                product_name=sent_product_sold,
+                specification=sent_specification or None
+            ).first()
+            if not stock:
+                errors.append('No stock record found for this product and specification.')
+            else:
+                available_quantity = stock.quantity + sale.quantity_sold
+                if sent_product_sold != sale.product_sold or (sent_specification or None) != sale.specification:
+                    available_quantity = stock.quantity
+                if sent_quantity_sold > available_quantity:
+                    errors.append(f'Not enough stock. Only {available_quantity} unit(s) available.')
+
         if errors:
             for error in errors:
                 messages.error(request, error)
             return render(request, 'sales_edit.html', {'sale': sale})
         sale.product_sold = sent_product_sold
         sale.specification = sent_specification or None
-        sale.quantity_sold = payload.get('quantity_sold')
+        sale.quantity_sold = sent_quantity_sold
         sale.payment_method = payload.get('payment_method')
         sale.save()
         return redirect('sales')
@@ -400,6 +514,35 @@ def stock_dashboard(request):
 
 def reports(request):
     """Aggregate domain records and receipts for a reports interface."""
+    start_date_raw = request.GET.get('start_date', '').strip()
+    end_date_raw = request.GET.get('end_date', '').strip()
+    export_requested = request.GET.get('export') == 'full'
+    errors = []
+    start_date = None
+    end_date = None
+
+    if start_date_raw:
+        try:
+            start_date = date_type.fromisoformat(start_date_raw)
+        except (ValueError, TypeError):
+            errors.append('Start date must be valid.')
+    if end_date_raw:
+        try:
+            end_date = date_type.fromisoformat(end_date_raw)
+        except (ValueError, TypeError):
+            errors.append('End date must be valid.')
+    if start_date and end_date and start_date > end_date:
+        errors.append('Start date must be earlier than or equal to end date.')
+
+    is_admin = request.user.is_authenticated and (
+        request.user.is_superuser or request.user.groups.filter(name='admin').exists()
+    )
+    if export_requested and not is_admin:
+        errors.append('Only Admin can export full reports.')
+
+    for error in errors:
+        messages.error(request, error)
+
     sales = Sale.objects.select_related('customer').prefetch_related('receipt').order_by('-date')
     sales_receipts = Receipt.objects.select_related('sale').order_by('-issued_on')
     stocks = Stock.objects.all().order_by('-date')
@@ -410,6 +553,30 @@ def reports(request):
     deposits = Deposit.objects.select_related('customer').order_by('-date')
     deposit_payments = DepositPayment.objects.select_related('deposit').order_by('-date')
     deposit_payment_receipts = DepositPaymentReceipt.objects.order_by('-payment_date')
+
+    if not errors:
+        if start_date:
+            sales = sales.filter(date__gte=start_date)
+            sales_receipts = sales_receipts.filter(issued_on__date__gte=start_date)
+            stocks = stocks.filter(date__gte=start_date)
+            suppliers = suppliers.filter(delivery_date__gte=start_date)
+            supplier_payments = supplier_payments.filter(date__gte=start_date)
+            customers = customers.filter(date_registered__gte=start_date)
+            customer_payments = customer_payments.filter(date__gte=start_date)
+            deposits = deposits.filter(date__gte=start_date)
+            deposit_payments = deposit_payments.filter(date__gte=start_date)
+            deposit_payment_receipts = deposit_payment_receipts.filter(payment_date__date__gte=start_date)
+        if end_date:
+            sales = sales.filter(date__lte=end_date)
+            sales_receipts = sales_receipts.filter(issued_on__date__lte=end_date)
+            stocks = stocks.filter(date__lte=end_date)
+            suppliers = suppliers.filter(delivery_date__lte=end_date)
+            supplier_payments = supplier_payments.filter(date__lte=end_date)
+            customers = customers.filter(date_registered__lte=end_date)
+            customer_payments = customer_payments.filter(date__lte=end_date)
+            deposits = deposits.filter(date__lte=end_date)
+            deposit_payments = deposit_payments.filter(date__lte=end_date)
+            deposit_payment_receipts = deposit_payment_receipts.filter(payment_date__date__lte=end_date)
 
     context = {
         'sales': sales,
@@ -429,6 +596,9 @@ def reports(request):
         'deposit_amount_outstanding': sum(d.amount_remaining for d in deposits),
         'supplier_payment_total': sum(p.amount for p in supplier_payments),
         'customer_payment_total': sum(p.amount for p in customer_payments),
+        'start_date': start_date_raw,
+        'end_date': end_date_raw,
+        'can_export_full_reports': is_admin,
     }
     return render(request, 'reports.html', context)
 
@@ -466,9 +636,17 @@ def add_supplier(request):
         body = request.POST
         errors = []
 
-        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
-        if body.get('product') in SPEC_REQUIRED and not body.get('specification', '').strip():
-            errors.append('Please select a specification for the chosen product.')
+        supplier_name = body.get('name', '').strip()
+        supplier_email = body.get('email', '').strip()
+        if not supplier_name:
+            errors.append('Supplier name is required.')
+        if supplier_email:
+            try:
+                validate_email(supplier_email)
+            except ValidationError:
+                errors.append('Supplier email address must be valid.')
+
+        validate_product_spec(body.get('product'), body.get('specification', '').strip(), errors)
 
         try:
             qty = int(body.get('quantity'))
@@ -480,16 +658,18 @@ def add_supplier(request):
 
         try:
             deposit = int(body.get('deposit', 0))
-            if deposit < 0:
-                errors.append('Deposit must be a positive number.')
+            if deposit <= 0:
+                errors.append('Credit amount must be greater than zero.')
         except (ValueError, TypeError):
-            errors.append('Deposit must be a valid whole number.')
+            errors.append('Credit amount must be a valid whole number.')
             deposit = None
 
         try:
             amount_owed = int(body.get('amount_owed') or 0)
-            if amount_owed < 0:
-                errors.append('Amount owed must be a positive number.')
+            if bool(body.get('is_credit')) and amount_owed <= 0:
+                errors.append('Credit amount owed must be greater than zero.')
+            elif amount_owed < 0:
+                errors.append('Amount owed cannot be negative.')
         except (ValueError, TypeError):
             errors.append('Amount owed must be a valid whole number.')
             amount_owed = 0
@@ -514,9 +694,9 @@ def add_supplier(request):
 
         Supplier.objects.create(
             supplier_company=body.get('supplier_company'),
-            name=body.get('name'),
+            name=supplier_name,
             phone=body.get('phone'),
-            email=body.get('email') or None,
+            email=supplier_email or None,
             address=body.get('address') or None,
             product=body.get('product'),
             specification=body.get('specification', '').strip() or None,
@@ -540,9 +720,17 @@ def supplier_edit(request, pk):
         body = request.POST
         errors = []
 
-        SPEC_REQUIRED = ['cement', 'iron_bars', 'nails', 'barbed_wire', 'iron_sheets']
-        if body.get('product') in SPEC_REQUIRED and not body.get('specification', '').strip():
-            errors.append('Please select a specification for the chosen product.')
+        supplier_name = body.get('name', '').strip()
+        supplier_email = body.get('email', '').strip()
+        if not supplier_name:
+            errors.append('Supplier name is required.')
+        if supplier_email:
+            try:
+                validate_email(supplier_email)
+            except ValidationError:
+                errors.append('Supplier email address must be valid.')
+
+        validate_product_spec(body.get('product'), body.get('specification', '').strip(), errors)
 
         try:
             qty = int(body.get('quantity'))
@@ -554,16 +742,18 @@ def supplier_edit(request, pk):
 
         try:
             deposit = int(body.get('deposit', 0))
-            if deposit < 0:
-                errors.append('Deposit must be a positive number.')
+            if deposit <= 0:
+                errors.append('Credit amount must be greater than zero.')
         except (ValueError, TypeError):
-            errors.append('Deposit must be a valid whole number.')
+            errors.append('Credit amount must be a valid whole number.')
             deposit = None
 
         try:
             amount_owed = int(body.get('amount_owed') or 0)
-            if amount_owed < 0:
-                errors.append('Amount owed must be a positive number.')
+            if bool(body.get('is_credit')) and amount_owed <= 0:
+                errors.append('Credit amount owed must be greater than zero.')
+            elif amount_owed < 0:
+                errors.append('Amount owed cannot be negative.')
         except (ValueError, TypeError):
             errors.append('Amount owed must be a valid whole number.')
             amount_owed = 0
@@ -587,9 +777,9 @@ def supplier_edit(request, pk):
             return render(request, 'supplier_reg.html', {'data': body, 'supplier': supplier})
 
         supplier.supplier_company = body.get('supplier_company')
-        supplier.name = body.get('name')
+        supplier.name = supplier_name
         supplier.phone = body.get('phone')
-        supplier.email = body.get('email') or None
+        supplier.email = supplier_email or None
         supplier.address = body.get('address') or None
         supplier.product = body.get('product')
         supplier.specification = body.get('specification', '').strip() or None
@@ -658,6 +848,17 @@ def supplier_view(request, pk):
     })
 
 
+def supplier_receipt(request, pk):
+    supplier = get_object_or_404(Supplier, pk=pk)
+    receipt, created = SupplierReceipt.objects.get_or_create(supplier=supplier)
+    payments = supplier.payments.order_by('-date')
+    return render(request, 'supplier_receipt.html', {
+        'supplier': supplier,
+        'receipt': receipt,
+        'payments': payments,
+    })
+
+
 
 # CUSTOMER VIEWS
 
@@ -673,8 +874,11 @@ def add_customer(request):
 
         name = body.get('name', '').strip()
         phone = body.get('phone', '').strip()
+        email = body.get('email', '').strip()
+        nin = body.get('NIN', '').strip().upper()
 
         address_distance = None
+
         try:
             address_distance = int(body.get('address_distance')) if body.get('address_distance') else None
             if address_distance is not None and address_distance < 0:
@@ -682,10 +886,7 @@ def add_customer(request):
         except (ValueError, TypeError):
             errors.append('Address distance must be a valid integer.')
 
-        if not name:
-            errors.append('Customer name is required.')
-        if not phone:
-            errors.append('Phone number is required.')
+        validate_customer_identity(name, phone, nin, email, errors, require_nin=True)
 
         if errors:
             for e in errors:
@@ -695,10 +896,10 @@ def add_customer(request):
         Customer.objects.create(
             name=name,
             phone=phone,
-            email=body.get('email') or None,
+            email=email or None,
             address=body.get('address') or None,
             address_distance=address_distance,
-            NIN=body.get('NIN') or None,
+            NIN=nin,
             bought_on_credit=bool(body.get('bought_on_credit')),
         )
         messages.success(request, 'Customer registered successfully.')
@@ -713,16 +914,11 @@ def customer_edit(request, pk):
         errors = []
         name = body.get('name', '').strip()
         phone = body.get('phone', '').strip()
+        email = body.get('email', '').strip()
+        nin = body.get('NIN', '').strip().upper()
 
-        if not name:
-            errors.append('Customer name is required.')
-        if not phone:
-            errors.append('Phone number is required.')
 
-        if errors:
-            for e in errors:
-                messages.error(request, e)
-            return render(request, 'customer_edit.html', {'data': body, 'customer': customer})
+        validate_customer_identity(name, phone, nin, email, errors, customer_id=customer.pk, require_nin=True)
 
         address_distance = None
         try:
@@ -739,10 +935,10 @@ def customer_edit(request, pk):
 
         customer.name = name
         customer.phone = phone
-        customer.email = body.get('email') or None
+        customer.email = email or None
         customer.address = body.get('address') or None
         customer.address_distance = address_distance
-        customer.NIN = body.get('NIN') or None
+        customer.NIN = nin
         customer.bought_on_credit = bool(body.get('bought_on_credit'))
         customer.save()
 
@@ -822,28 +1018,56 @@ def add_deposit(request):
             expiry_date = None
         customer_manual = (body.get('customer_manual') or '').strip()
         customer_field = body.get('customer')
+        contact = body.get('contact', '').strip()
+        nin = body.get('NIN', '').strip()
+        selected_customer = None
         if not customer_field and not customer_manual:
             errors.append('Please select or enter a customer.')
-        if not body.get('contact', '').strip():
-            errors.append('Contact is required.')
+        elif customer_field:
+            try:
+                selected_customer = Customer.objects.get(pk=customer_field)
+            except Customer.DoesNotExist:
+                errors.append('Selected customer was not found.')
+
+        if body.get('item') not in dict(SCHEME_ITEMS):
+            errors.append('Only cement, iron sheets, and iron bars are eligible for the deposit scheme.')
+
+        customer_name = customer_manual or (selected_customer.name if selected_customer else '')
+        validate_customer_identity(
+            customer_name,
+            contact,
+            nin,
+            selected_customer.email if selected_customer else '',
+            errors,
+            customer_id=selected_customer.pk if selected_customer else None,
+            require_nin=True,
+        )
+
         if errors:
             for e in errors:
                 messages.error(request, e)
             return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS, 'data': body})
         # determine customer object: prefer manual name if provided
         if customer_manual:
-            customer_obj, created = Customer.objects.get_or_create(name=customer_manual)
+            customer_obj, created = Customer.objects.get_or_create(
+                NIN=nin,
+                defaults={'name': customer_manual, 'phone': contact},
+            )
+            if not created:
+                customer_obj.name = customer_manual
+                customer_obj.phone = contact
+                customer_obj.save(update_fields=['name', 'phone'])
         else:
-            try:
-                customer_obj = Customer.objects.get(pk=customer_field)
-            except Customer.DoesNotExist:
-                messages.error(request, 'Selected customer was not found.')
-                return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS, 'data': body})
+            customer_obj = selected_customer
+            if customer_obj.NIN != nin or customer_obj.phone != contact:
+                customer_obj.NIN = nin
+                customer_obj.phone = contact
+                customer_obj.save(update_fields=['NIN', 'phone'])
         Deposit.objects.create(
             customer=customer_obj,
             item=body.get('item'),
-            NIN=body.get('NIN') or None,
-            contact=body.get('contact', '').strip(),
+            NIN=nin,
+            contact=contact,
             deposit_amount=deposit_amount,
             expiry_date=expiry_date,
             total_balance=total_balance,
@@ -878,14 +1102,34 @@ def deposit_edit(request, pk):
         except (ValueError, TypeError):
             errors.append('Please enter a valid expiry date.')
             expiry_date = None
+        if body.get('item') not in dict(SCHEME_ITEMS):
+            errors.append('Only cement, iron sheets, and iron bars are eligible for the deposit scheme.')
+        customer_obj = None
+        if body.get('customer'):
+            customer_obj = get_object_or_404(Customer, pk=body.get('customer'))
+        contact = body.get('contact', '').strip()
+        nin = body.get('NIN', '').strip()
+        validate_customer_identity(
+            customer_obj.name if customer_obj else '',
+            contact,
+            nin,
+            customer_obj.email if customer_obj else '',
+            errors,
+            customer_id=customer_obj.pk if customer_obj else None,
+            require_nin=True,
+        )
         if errors:
             for e in errors:
                 messages.error(request, e)
             return render(request, 'deposit_edit.html', {'deposit': deposit, 'customers': customers, 'scheme_items': SCHEME_ITEMS})
-        deposit.customer = get_object_or_404(Customer, pk=body.get('customer'))
+        if customer_obj.NIN != nin or customer_obj.phone != contact:
+            customer_obj.NIN = nin
+            customer_obj.phone = contact
+            customer_obj.save(update_fields=['NIN', 'phone'])
+        deposit.customer = customer_obj
         deposit.item = body.get('item')
-        deposit.NIN = body.get('NIN') or None
-        deposit.contact = body.get('contact', '').strip()
+        deposit.NIN = nin
+        deposit.contact = contact
         deposit.deposit_amount = deposit_amount
         deposit.expiry_date = expiry_date
         deposit.total_balance = total_balance
@@ -926,6 +1170,7 @@ def deposit_progress(request, pk):
             for e in errors:
                 messages.error(request, e)
         else:
+            balance_before = remaining
             # Create the deposit payment
             deposit_payment = DepositPayment.objects.create(
                 deposit=deposit,
@@ -934,7 +1179,6 @@ def deposit_progress(request, pk):
             )
             
             # Calculate balance tracking
-            balance_before = deposit.amount_remaining
             balance_after = max(balance_before - amount, 0)
             
             # Create temporary receipt for this payment

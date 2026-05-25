@@ -69,6 +69,15 @@
         button:hover {
             background-color: #64B5F6;
         }
+
+        .alert-error {
+            color: #842029;
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 14px;
+        }
     </style>
 </head>
 
@@ -79,12 +88,16 @@
             Nyondo General Hardware
         </h1>
         <hr>
-        <form>
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+        <form method="post" novalidate>
+            {% csrf_token %}
             <label for="Email">Email:</label>
-            <input type="text" id="Email" placeholder="username" required>
+            <input type="text" id="Email" name="username" placeholder="username" required>
 
             <label for="Password">Password:</label>
-            <input type="password" id="Password" placeholder="Password" required>
+            <input type="password" id="Password" name="password" placeholder="Password" required>
 
             <button type="submit">LOGIN</button>
         </form>

@@ -69,6 +69,8 @@
           <div class="d-flex align-items-center gap-2">
             <a href="{% url 'supplier_view' supplier.id %}" class="btn btn-sm btn-info text-white" title="View"><i
                 class="bi bi-eye"></i></a>
+            <a href="{% url 'supplier_receipt' supplier.id %}" class="btn btn-sm btn-outline-primary" title="Print Receipt"><i
+                class="bi bi-printer"></i></a>
             <a href="{% url 'supplier_edit' supplier.id %}" class="btn btn-sm btn-warning" title="Edit"><i
                 class="bi bi-pencil"></i></a>
             <a href="{% url 'supplier_delete' supplier.id %}" class="btn btn-sm btn-danger" title="Delete"><i

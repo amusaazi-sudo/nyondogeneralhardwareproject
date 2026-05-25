@@ -23,7 +23,7 @@
         <small class="d-block text-center">NYONDO GENERAL HARDWARE LTD — Deposit Scheme</small>
     </div>
     <div class="card-body">
-        <form method="POST">
+        <form method="POST" novalidate>
             {% csrf_token %}
             <div class="row g-3">
                 <div class="col-md-6">
@@ -48,12 +48,12 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Contact</label>
-                    <input type="text" name="contact" class="form-control" value="{{ data.contact|default:'' }}"
+                    <input type="text" name="contact" class="form-control" value="{{ data.contact|default:'' }}" pattern="\+2567[0-9]{8}" placeholder="+2567XXXXXXXX"
                         required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">NIN <span class="text-muted fw-normal">(optional)</span></label>
-                    <input type="text" name="NIN" class="form-control" value="{{ data.NIN|default:'' }}">
+                    <input type="text" name="NIN" class="form-control" value="{{ data.NIN|default:'' }}" pattern="[0-9]{13}" maxlength="13" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Deposit Amount (UGX)</label>

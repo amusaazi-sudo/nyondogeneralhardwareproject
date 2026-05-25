@@ -43,6 +43,8 @@
         <div class="d-flex gap-2">
             <a href="{% url 'supplier_edit' supplier.id %}" class="btn btn-sm btn-warning"><i
                     class="bi bi-pencil me-1"></i>Edit</a>
+            <a href="{% url 'supplier_receipt' supplier.id %}" class="btn btn-sm btn-outline-primary"><i
+                    class="bi bi-printer me-1"></i>Receipt</a>
             <a href="{% url 'suppliers' %}" class="btn btn-sm btn-outline-secondary"><i
                     class="bi bi-arrow-left me-1"></i>Back</a>
         </div>
@@ -101,8 +103,7 @@
                     <tbody>
                         <tr>
                             <td class="info-label">Product</td>
-                            <td>{{ supplier.get_product_display }}{% if supplier.specification %} — {{
-                                supplier.get_specification_display }}{% endif %}</td>
+                            <td>{{ supplier.get_product_display }}{% if supplier.specification %} — {{ supplier.get_specification_display }}{% endif %}</td>
                         </tr>
                         <tr>
                             <td class="info-label">Quantity</td>
@@ -181,7 +182,7 @@
         <div class="card border-success">
             <div class="card-body">
                 <p class="section-title" style="color:#198754; border-color:#198754;">Record a Payment</p>
-                <form method="post">
+                <form method="post" novalidate>
                     {% csrf_token %}
                     <div class="mb-2">
                         <label class="form-label form-label-sm">Amount (UGX)</label>

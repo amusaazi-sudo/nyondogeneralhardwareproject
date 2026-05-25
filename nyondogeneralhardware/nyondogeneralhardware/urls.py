@@ -50,6 +50,7 @@ urlpatterns = [
     path('suppliers/<int:pk>/edit/', views.supplier_edit, name='supplier_edit'),
     path('suppliers/<int:pk>/delete/', views.supplier_delete, name='supplier_delete'),
     path('suppliers/<int:pk>/view/', views.supplier_view, name='supplier_view'),
+    path('suppliers/<int:pk>/receipt/', views.supplier_receipt, name='supplier_receipt'),
     path('suppliers/reports/', views.supply_reports, name='supply_reports'),
 
 # CUSTOMER

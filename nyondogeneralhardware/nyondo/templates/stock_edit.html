@@ -6,13 +6,19 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
   integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 <div class="container mt-4">
-  <h2 class="mb-4">EDIT STOCK</h2>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">EDIT STOCK</h2>
+    <div class="d-flex gap-2">
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-primary">Back to Dashboard</a>
+      <a href="{% url 'stock_dashboard' %}" class="btn btn-outline-secondary">Back</a>
+    </div>
+  </div>
 
   {% for message in messages %}
   <div class="alert alert-{{ message.tags }}">{{ message }}</div>
   {% endfor %}
 
-  <form method="post" class="row g-3">
+  <form method="post" class="row g-3" novalidate>
     {% csrf_token %}
 
     <div class="col-md-6">
@@ -28,34 +34,40 @@
     </div>
 
     <div class="col-md-6">
+      <label for="specification" class="form-label">Gauge/Size</label>
+      <input type="text" class="form-control" id="specification" name="specification"
+        value="{{ stock.specification|default:'' }}">
+    </div>
+
+    <div class="col-md-6">
       <label for="category" class="form-label">Category</label>
       <select id="category" class="form-select" name="category" required>
-        <option value="electrical" {% if stock.category=="electrical" %}selected{% endif %}>Electrical</option>
-        <option value="plumbing" {% if stock.category=="plumbing" %}selected{% endif %}>Plumbing</option>
-        <option value="building" {% if stock.category=="building" %}selected{% endif %}>Building</option>
+        <option value="electrical" {% if stock.category == "electrical" %}selected{% endif %}>Electrical</option>
+        <option value="plumbing" {% if stock.category == "plumbing" %}selected{% endif %}>Plumbing</option>
+        <option value="building" {% if stock.category == "building" %}selected{% endif %}>Building</option>
       </select>
     </div>
 
     <div class="col-md-6">
       <label for="quantity" class="form-label">Quantity</label>
-      <input type="number" class="form-control" id="quantity" name="quantity" value="{{ stock.quantity }}" required>
+      <input type="number" min="0" step="1" class="form-control" id="quantity" name="quantity" value="{{ stock.quantity }}" required>
     </div>
 
     <div class="col-md-6">
       <label for="buying_price" class="form-label">Buying Price</label>
-      <input type="number" class="form-control" id="buying_price" name="buying_price" value="{{ stock.buying_price }}"
+      <input type="number" min="1" step="1" class="form-control" id="buying_price" name="buying_price" value="{{ stock.buying_price }}"
         required>
     </div>
 
     <div class="col-md-6">
       <label for="selling_price" class="form-label">Selling Price</label>
-      <input type="number" class="form-control" id="selling_price" name="selling_price"
+      <input type="number" min="0" step="1" class="form-control" id="selling_price" name="selling_price"
         value="{{ stock.selling_price }}" required>
     </div>
 
     <div class="col-md-6">
       <label for="date" class="form-label">Date</label>
-      <input type="date" class="form-control" id="date" name="date" value="{{ stock.date|date:'Y-m-d' }}" required>
+      <input type="date" class="form-control" id="date" name="date" value="{{ today_date }}" min="{{ today_date }}" max="{{ today_date }}" required>
     </div>
 
     <div class="col-12">

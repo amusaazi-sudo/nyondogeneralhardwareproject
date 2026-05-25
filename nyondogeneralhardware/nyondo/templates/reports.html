@@ -6,12 +6,32 @@
 {% block content %}
 <div class="container-fluid">
 	<h3 class="mb-3">Reports</h3>
+	{% for message in messages %}
+	<div class="alert alert-{{ message.tags }}">{{ message }}</div>
+	{% endfor %}
 	<div class="mb-3 no-print">
 		<button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
 			<i class="bi bi-printer me-1"></i> Print Report
 		</button>
+		{% if can_export_full_reports %}
+		<a class="btn btn-outline-secondary btn-sm ms-2" href="?start_date={{ start_date }}&end_date={{ end_date }}&export=full">Export Full Report</a>
+		{% endif %}
 		<span class="text-muted ms-3">Showing a concise summary of the latest records for easier review.</span>
 	</div>
+	<form method="get" class="row g-2 align-items-end mb-4 no-print" novalidate>
+		<div class="col-12 col-md-3">
+			<label class="form-label">Start Date</label>
+			<input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+		</div>
+		<div class="col-12 col-md-3">
+			<label class="form-label">End Date</label>
+			<input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+		</div>
+		<div class="col-12 col-md-3">
+			<button type="submit" class="btn btn-primary">Filter</button>
+			<a href="{% url 'reports' %}" class="btn btn-outline-secondary">Clear</a>
+		</div>
+	</form>
 	<div class="row mb-4 g-3">
 		<div class="col-12 col-md-6 col-lg-3">
 			<div class="card p-3 border-start border-4 border-primary">
