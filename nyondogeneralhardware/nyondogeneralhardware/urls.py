@@ -24,10 +24,11 @@ from nyondo import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('login/', views.login_view, name='login'),
+
+    path('', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
-    path("", views.dashboard, name="dashboard"),
+    path("dashboard/", views.dashboard, name="dashboard"),
     path("sales/", views.sales_dashboard, name="sales_dashboard"),
     path("sales-list/", views.sales, name="sales"),   
     path("add_sales/", views.add_sales, name="add_sales"),

@@ -1,6 +1,4 @@
-<!-- COMMENT-HEADER -->
-<!-- Template: nyondo/templates/deposit_reg.html -->
-<!-- Use this template for UI pages and content rendering. -->
+<!-- deposit form -->
 {% extends 'base.html' %}
 {% block content %}
 
@@ -53,7 +51,7 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">NIN <span class="text-muted fw-normal">(optional)</span></label>
-                    <input type="text" name="NIN" class="form-control" value="{{ data.NIN|default:'' }}" pattern="[0-9]{13}" maxlength="13" required>
+                    <input type="text" name="NIN" class="form-control" value="{{ data.NIN|default:'' }}" pattern="r'^[A-Z]{2}[0-9]{12}[A-Z]$" maxlength="15" required>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Deposit Amount (UGX)</label>

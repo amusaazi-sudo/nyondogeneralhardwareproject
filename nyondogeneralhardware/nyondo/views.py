@@ -1,6 +1,4 @@
-# COMMENT-HEADER
-# File: nyondo/views.py
-# Simple review note: use this file for code logic and Django app behavior.
+# views
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -8,12 +6,19 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
 from .models import Stock, Sale, Receipt, Supplier, SupplierPayment, SupplierReceipt, Customer, CustomerPayment, Deposit, DepositPayment, DepositPaymentReceipt, SCHEME_ITEMS
 from datetime import date as date_type
 import re
-# create your views here
+
+
+# ─────────────────────────────────────────────
+# CONSTANTS & VALIDATORS
+# ─────────────────────────────────────────────
 
 ALLOWED_ROLES = {'sales_manager', 'stock_manager', 'admin'}
+
 SPEC_CHOICES = {
     'cement': {'cem_iin', 'cem_iiin'},
     'iron_bars': {'10mm', '12mm', '16mm'},
@@ -30,6 +35,55 @@ CUSTOMER_NAME_RE = re.compile(r"^[A-Za-z][A-Za-z\s'.-]*$")
 UG_PHONE_RE = re.compile(r'^\+2567\d{8}$')
 NIN_RE = re.compile(r'^\d{13}$')
 
+
+# ─────────────────────────────────────────────
+# ROLE CHECKER FUNCTIONS
+# ─────────────────────────────────────────────
+
+def is_admin(user):
+    """Admin (superuser or admin group) — full access to everything."""
+    return user.is_superuser or user.groups.filter(name='admin').exists()
+
+def is_stock_manager(user):
+    return user.groups.filter(name='stock_manager').exists()
+
+def is_sales_manager(user):
+    return user.groups.filter(name='sales_manager').exists()
+
+# --- Combined access checkers ---
+
+def can_access_stock(user):
+    """Stock pages: admin + stock_manager only."""
+    return is_admin(user) or is_stock_manager(user)
+
+def can_access_sales(user):
+    """Sales pages: all three roles."""
+    return is_admin(user) or is_stock_manager(user) or is_sales_manager(user)
+
+def can_access_suppliers(user):
+    """Supplier pages: admin + stock_manager only."""
+    return is_admin(user) or is_stock_manager(user)
+
+def can_access_reports(user):
+    """Reports: admin only."""
+    return is_admin(user)
+
+def can_access_dashboard(user):
+    """General pages (dashboard, customers, deposits): any authenticated, allowed role."""
+    return (
+        user.is_superuser
+        or user.groups.filter(name='admin').exists()
+    )
+def can_access_any(user):
+    """General pages (customers, deposits, receipts): any allowed role."""
+    return (
+        user.is_superuser
+        or user.groups.filter(name__in=['admin', 'stock_manager', 'sales_manager']).exists()
+    )
+
+# ─────────────────────────────────────────────
+# SHARED VALIDATION HELPERS
+# ─────────────────────────────────────────────
 
 def validate_product_spec(product, specification, errors):
     if product in SPEC_REQUIRED and not specification:
@@ -53,24 +107,27 @@ def validate_customer_identity(name, phone, nin, email, errors, customer_id=None
     if require_nin and not nin:
         errors.append('NIN is required.')
     if nin:
-        # Check if NIN is alphanumeric and max 15 characters
         if len(nin) > 15:
             errors.append('NIN must be maximum 15 characters long.')
         elif not nin.isalnum():
             errors.append('NIN must contain only letters and numbers (alphanumeric).')
         else:
-            # Check for duplicate NIN
             nin_matches = Customer.objects.filter(NIN=nin)
-        if customer_id:
-            nin_matches = nin_matches.exclude(pk=customer_id)
-        if nin_matches.exists():
-            errors.append('NIN is already registered to another customer.')
+            if customer_id:
+                nin_matches = nin_matches.exclude(pk=customer_id)
+            if nin_matches.exists():
+                errors.append('NIN is already registered to another customer.')
 
     if email:
         try:
             validate_email(email)
         except ValidationError:
             errors.append('Email address must be valid.')
+
+
+# ─────────────────────────────────────────────
+# AUTH VIEWS
+# ─────────────────────────────────────────────
 
 def login_view(request):
     if request.method == 'POST':
@@ -92,29 +149,43 @@ def login_view(request):
             return render(request, 'login.html')
 
         login(request, user)
-        return redirect('dashboard')
+
+        # Role-based redirect after login
+        if user.is_superuser or user.groups.filter(name='admin').exists():
+            return redirect('dashboard')
+        elif user.groups.filter(name='sales_manager').exists():
+            return redirect('sales_dashboard')
+        elif user.groups.filter(name='stock_manager').exists():
+            return redirect('stock_dashboard')
+        else:
+            return redirect('dashboard')
 
     return render(request, 'login.html')
 
 
 def logout_view(request):
-    """Logout the current user and redirect to login page"""
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
     return redirect('login')
 
 
-#STOCK VIEWS
-def stocks (request):
-    all_stock = Stock.objects.all()
-    context = {
-        "stocks":all_stock
-    }   
-    return render(request, 'stock.html', context)
+# ─────────────────────────────────────────────
+# STOCK VIEWS
+# Access: admin + stock_manager only
+# ─────────────────────────────────────────────
 
-def add_stock (request):
+@login_required
+@user_passes_test(can_access_stock, login_url='login')
+def stocks(request):
+    all_stock = Stock.objects.all()
+    return render(request, 'stock.html', {'stocks': all_stock})
+
+
+@login_required
+@user_passes_test(can_access_stock, login_url='login')
+def add_stock(request):
     today = timezone.now().date()
-    if request.method == "POST":
+    if request.method == 'POST':
         body = request.POST
         sent_product_name = body.get('product_name')
         sent_specification = body.get('specification', '').strip()
@@ -125,11 +196,9 @@ def add_stock (request):
         sent_selling_price = body.get('selling_price')
         sent_date = body.get('date')
 
-        # collect all validation errors before saving
         errors = []
         validate_product_spec(sent_product_name, sent_specification, errors)
 
-        # validate quantity is a whole positive number
         try:
             sent_quantity = int(sent_quantity)
             if sent_quantity < 0:
@@ -137,7 +206,6 @@ def add_stock (request):
         except (ValueError, TypeError):
             errors.append('Quantity must be a valid whole number.')
 
-        # validate buying price is a positive number
         try:
             sent_buying_price = int(sent_buying_price)
             if sent_buying_price <= 0:
@@ -145,7 +213,6 @@ def add_stock (request):
         except (ValueError, TypeError):
             errors.append('Unit cost must be a valid number.')
 
-        # validate selling price is a positive number
         try:
             sent_selling_price = int(sent_selling_price)
             if sent_selling_price < 0:
@@ -159,16 +226,13 @@ def add_stock (request):
         if Stock.objects.filter(product_name=sent_product_name, specification=sent_specification or None).exists():
             errors.append('This stock item already exists.')
 
-        # Stock orders must be recorded for today's date only.
         try:
-            from datetime import date as date_type
             parsed_date = date_type.fromisoformat(sent_date)
             if parsed_date != today:
                 errors.append('Stock order date must be today.')
         except (ValueError, TypeError):
             errors.append('Please enter a valid date.')
 
-        # if any errors exist, show them and re-render the form with the user's input
         if errors:
             for error in errors:
                 messages.error(request, error)
@@ -189,24 +253,24 @@ def add_stock (request):
         return redirect('stocks')
     return render(request, 'stock_reg.html', {'today_date': today.isoformat()})
 
+
+@login_required
+@user_passes_test(can_access_stock, login_url='login')
 def stock_edit(request, pk):
     stock = get_object_or_404(Stock, pk=pk)
     today = timezone.now().date()
-    if request.method == "POST":
+    if request.method == 'POST':
         body = request.POST
         errors = []
 
         sent_date = body.get('date')
-        # Stock orders must be recorded for today's date only.
         try:
-            from datetime import date as date_type
             parsed_date = date_type.fromisoformat(sent_date)
             if parsed_date != today:
                 errors.append('Stock order date must be today.')
         except (ValueError, TypeError):
             errors.append('Please enter a valid date.')
 
-        # if date is invalid, show errors and re-render the edit form
         if errors:
             for error in errors:
                 messages.error(request, error)
@@ -243,14 +307,14 @@ def stock_edit(request, pk):
         if sent_buying_price is not None and sent_selling_price is not None and sent_selling_price < sent_buying_price:
             errors.append('Selling price must be greater than or equal to unit cost.')
 
-        duplicate_stock = Stock.objects.filter(product_name=sent_product_name, specification=sent_specification or None).exclude(pk=stock.pk)
-        if duplicate_stock.exists():
+        if Stock.objects.filter(product_name=sent_product_name, specification=sent_specification or None).exclude(pk=stock.pk).exists():
             errors.append('This stock item already exists.')
 
         if errors:
             for error in errors:
                 messages.error(request, error)
             return render(request, 'stock_edit.html', {'stock': stock, 'today_date': today.isoformat()})
+
         stock.product_name = sent_product_name
         stock.specification = sent_specification or None
         stock.product_code = body.get('product_code')
@@ -261,36 +325,35 @@ def stock_edit(request, pk):
         stock.date = parsed_date
         stock.save()
         return redirect('stocks')
-    return render(request, 'stock_edit.html', {"stock": stock, 'today_date': today.isoformat()})
+    return render(request, 'stock_edit.html', {'stock': stock, 'today_date': today.isoformat()})
 
+
+@login_required
+@user_passes_test(can_access_stock, login_url='login')
 def stock_delete(request, pk):
     stock = get_object_or_404(Stock, pk=pk)
-    if request.method == "POST":
+    if request.method == 'POST':
         stock.delete()
         return redirect('stocks')
-    return render(request, 'stock_delete.html', {"stock": stock})
+    return render(request, 'stock_delete.html', {'stock': stock})
 
 
-
-
-
-
-
-
+# ─────────────────────────────────────────────
 # SALES VIEWS
+# Access: all three roles
+# ─────────────────────────────────────────────
 
-# Shows all sales records
+@login_required
+@user_passes_test(can_access_sales, login_url='login')
 def sales(request):
-    sales = Sale.objects.all()
-    context = {
-        "sales":sales
-    }
-    return render(request, 'sales.html', context)
+    all_sales = Sale.objects.all()
+    return render(request, 'sales.html', {'sales': all_sales})
 
 
-# Saves a new sale, deducts from stock automatically, then auto-creates its receipt
+@login_required
+@user_passes_test(can_access_sales, login_url='login')
 def add_sales(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         payload = request.POST
         sent_customer_name = payload.get('customer_name', '').strip()
         sent_product_sold = payload.get('product_sold')
@@ -309,7 +372,6 @@ def add_sales(request):
 
         validate_product_spec(sent_product_sold, sent_specification, errors)
 
-        # validate quantity is a positive whole number
         try:
             sent_quantity_sold = int(payload.get('quantity_sold'))
             if sent_quantity_sold <= 0:
@@ -318,6 +380,7 @@ def add_sales(request):
             errors.append('Quantity must be a valid whole number.')
             sent_quantity_sold = None
 
+        sent_address_distance = None
         if sent_delivery:
             if not sent_address:
                 errors.append('Please enter the delivery address.')
@@ -336,23 +399,19 @@ def add_sales(request):
                 messages.error(request, error)
             return render(request, 'sales_reg.html', {'data': payload})
 
-        # find the matching stock item by product name and specification
         stock = Stock.objects.filter(
             product_name=sent_product_sold,
             specification=sent_specification or None
         ).first()
 
-        # block the sale if no matching stock record exists
         if not stock:
             messages.error(request, 'No stock record found for this product and specification.')
             return render(request, 'sales_reg.html', {'data': payload})
 
-        # block the sale if there is not enough stock available
         if stock.quantity < sent_quantity_sold:
             messages.error(request, f'Not enough stock. Only {stock.quantity} unit(s) available.')
             return render(request, 'sales_reg.html', {'data': payload})
 
-        # deduct the sold quantity from stock
         stock.quantity -= sent_quantity_sold
         stock.save()
 
@@ -369,7 +428,6 @@ def add_sales(request):
                 customer.address_distance = sent_address_distance
                 customer.save()
 
-        # save the sale record
         new_sale = Sale(
             customer=customer,
             product_sold=sent_product_sold,
@@ -379,22 +437,22 @@ def add_sales(request):
             delivery=sent_delivery,
         )
         new_sale.save()
-
-        # auto-create the receipt linked to this sale
         Receipt.objects.create(sale=new_sale)
         return redirect('sales')
     return render(request, 'sales_reg.html')
 
 
-# Edits an existing sale (receipt stays linked, no changes needed there)
+@login_required
+@user_passes_test(can_access_sales, login_url='login')
 def sales_edit(request, pk):
     sale = get_object_or_404(Sale, pk=pk)
-    if request.method == "POST":
+    if request.method == 'POST':
         payload = request.POST
         sent_product_sold = payload.get('product_sold')
         sent_specification = payload.get('specification', '').strip()
         errors = []
         validate_product_spec(sent_product_sold, sent_specification, errors)
+
         try:
             sent_quantity_sold = int(payload.get('quantity_sold'))
             if sent_quantity_sold <= 0:
@@ -421,23 +479,33 @@ def sales_edit(request, pk):
             for error in errors:
                 messages.error(request, error)
             return render(request, 'sales_edit.html', {'sale': sale})
+
         sale.product_sold = sent_product_sold
         sale.specification = sent_specification or None
         sale.quantity_sold = sent_quantity_sold
         sale.payment_method = payload.get('payment_method')
         sale.save()
         return redirect('sales')
-    return render(request, 'sales_edit.html', {"sale": sale})
+    return render(request, 'sales_edit.html', {'sale': sale})
 
+
+@login_required
+@user_passes_test(can_access_sales, login_url='login')
 def sales_delete(request, pk):
     sale = get_object_or_404(Sale, pk=pk)
-    if request.method == "POST":
+    if request.method == 'POST':
         sale.delete()
         return redirect('sales')
-    return render(request, 'sales_delete.html', {"sale": sale})
+    return render(request, 'sales_delete.html', {'sale': sale})
 
 
+# ─────────────────────────────────────────────
+# DASHBOARD VIEWS
+# Access: all roles (redirected to role-appropriate dashboard after login)
+# ─────────────────────────────────────────────
 
+@login_required
+@user_passes_test(can_access_dashboard, login_url='login')
 def dashboard(request):
     today = timezone.now().date()
     sales_count = Sale.objects.count() or 0
@@ -469,21 +537,26 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-# Shows all auto-generated receipts, newest first
+
+@login_required
+@user_passes_test(can_access_sales, login_url='login')
 def sales_receipt(request):
-    receipts = Receipt.objects.select_related('sale').order_by('-issued_on')  # select_related avoids extra DB queries
+    receipts = Receipt.objects.select_related('sale').order_by('-issued_on')
     return render(request, 'sales_receipt.html', {'receipts': receipts})
 
 
+@login_required
+@user_passes_test(can_access_sales, login_url='login')
 def sale_receipt(request, pk):
     receipt = get_object_or_404(Receipt, sale_id=pk)
     return render(request, 'sale_receipt.html', {'receipt': receipt})
 
 
-# Sales dashboard — passes real sale + receipt data to the template
+@login_required
+@user_passes_test(can_access_sales, login_url='login')
 def sales_dashboard(request):
     today = timezone.now().date()
-    sales = Sale.objects.prefetch_related('receipt').order_by('-date')  # prefetch_related loads receipts efficiently
+    sales = Sale.objects.prefetch_related('receipt').order_by('-date')
     todays_sales = Sale.objects.filter(date=today).count() or 0
     transport_trips = Sale.objects.filter(delivery=True).count() or 0
     total_revenue = sum(s.sale_total for s in sales)
@@ -496,6 +569,9 @@ def sales_dashboard(request):
     }
     return render(request, 'sales_dashboard.html', context)
 
+
+@login_required
+@user_passes_test(can_access_stock, login_url='login')
 def stock_dashboard(request):
     stocks = Stock.objects.all()
     low_stock_items = stocks.filter(quantity__gt=0, quantity__lte=10)
@@ -512,8 +588,14 @@ def stock_dashboard(request):
     return render(request, 'stock_dashboard.html', context)
 
 
+# ─────────────────────────────────────────────
+# REPORTS VIEWS
+# Access: admin only
+# ─────────────────────────────────────────────
+
+@login_required
+@user_passes_test(can_access_reports, login_url='login')
 def reports(request):
-    """Aggregate domain records and receipts for a reports interface."""
     start_date_raw = request.GET.get('start_date', '').strip()
     end_date_raw = request.GET.get('end_date', '').strip()
     export_requested = request.GET.get('export') == 'full'
@@ -534,10 +616,8 @@ def reports(request):
     if start_date and end_date and start_date > end_date:
         errors.append('Start date must be earlier than or equal to end date.')
 
-    is_admin = request.user.is_authenticated and (
-        request.user.is_superuser or request.user.groups.filter(name='admin').exists()
-    )
-    if export_requested and not is_admin:
+    # Export is admin-only — already enforced by the decorator, but kept for template context
+    if export_requested and not is_admin(request.user):
         errors.append('Only Admin can export full reports.')
 
     for error in errors:
@@ -598,15 +678,19 @@ def reports(request):
         'customer_payment_total': sum(p.amount for p in customer_payments),
         'start_date': start_date_raw,
         'end_date': end_date_raw,
-        'can_export_full_reports': is_admin,
+        'can_export_full_reports': True,  # always True here since only admin reaches this view
     }
     return render(request, 'reports.html', context)
 
 
+# ─────────────────────────────────────────────
 # SUPPLIER VIEWS
+# Access: admin + stock_manager only
+# ─────────────────────────────────────────────
 
+@login_required
+@user_passes_test(can_access_suppliers, login_url='login')
 def supply_reports(request):
-    from django.db.models import Sum, Count
     suppliers = Supplier.objects.all()
     total_suppliers = suppliers.count()
     paid = suppliers.filter(payment_status='Paid').count()
@@ -626,11 +710,16 @@ def supply_reports(request):
         'total_owed': total_owed,
     })
 
+
+@login_required
+@user_passes_test(can_access_suppliers, login_url='login')
 def suppliers(request):
     all_suppliers = Supplier.objects.all()
     return render(request, 'supplier.html', {'suppliers': all_suppliers})
 
 
+@login_required
+@user_passes_test(can_access_suppliers, login_url='login')
 def add_supplier(request):
     if request.method == 'POST':
         body = request.POST
@@ -714,6 +803,8 @@ def add_supplier(request):
     return render(request, 'supplier_reg.html')
 
 
+@login_required
+@user_passes_test(can_access_suppliers, login_url='login')
 def supplier_edit(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     if request.method == 'POST':
@@ -796,6 +887,8 @@ def supplier_edit(request, pk):
     return render(request, 'supplier_reg.html', {'data': supplier.__dict__, 'supplier': supplier})
 
 
+@login_required
+@user_passes_test(can_access_suppliers, login_url='login')
 def supplier_delete(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     if request.method == 'POST':
@@ -804,6 +897,8 @@ def supplier_delete(request, pk):
     return render(request, 'supplier_delete.html', {'supplier': supplier})
 
 
+@login_required
+@user_passes_test(can_access_suppliers, login_url='login')
 def supplier_view(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     payments = supplier.payments.order_by('-date')
@@ -831,7 +926,7 @@ def supplier_view(request, pk):
                 amount=amount,
                 note=request.POST.get('note', '').strip(),
             )
-            new_paid = supplier.total_paid  # recalculated after save
+            new_paid = supplier.total_paid
             if new_paid >= supplier.total_cost:
                 supplier.payment_status = 'Paid'
                 supplier.amount_owed = 0
@@ -848,6 +943,8 @@ def supplier_view(request, pk):
     })
 
 
+@login_required
+@user_passes_test(can_access_suppliers, login_url='login')
 def supplier_receipt(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
     receipt, created = SupplierReceipt.objects.get_or_create(supplier=supplier)
@@ -859,14 +956,20 @@ def supplier_receipt(request, pk):
     })
 
 
-
+# ─────────────────────────────────────────────
 # CUSTOMER VIEWS
+# Access: all three roles
+# ─────────────────────────────────────────────
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def customers(request):
     all_customers = Customer.objects.all().order_by('-date_registered')
     return render(request, 'customer.html', {'customers': all_customers})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def add_customer(request):
     if request.method == 'POST':
         body = request.POST
@@ -876,7 +979,6 @@ def add_customer(request):
         phone = body.get('phone', '').strip()
         email = body.get('email', '').strip()
         nin = body.get('NIN', '').strip().upper()
-
         address_distance = None
 
         try:
@@ -907,6 +1009,8 @@ def add_customer(request):
     return render(request, 'customer_reg.html')
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def customer_edit(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
@@ -916,7 +1020,6 @@ def customer_edit(request, pk):
         phone = body.get('phone', '').strip()
         email = body.get('email', '').strip()
         nin = body.get('NIN', '').strip().upper()
-
 
         validate_customer_identity(name, phone, nin, email, errors, customer_id=customer.pk, require_nin=True)
 
@@ -959,6 +1062,8 @@ def customer_edit(request, pk):
     })
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def customer_delete(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
@@ -968,6 +1073,8 @@ def customer_delete(request, pk):
     return render(request, 'customer_delete.html', {'customer': customer})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def customer_view(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     sales = customer.sales.order_by('-date')
@@ -977,8 +1084,13 @@ def customer_view(request, pk):
     })
 
 
+# ─────────────────────────────────────────────
 # DEPOSIT SCHEME VIEWS
+# Access: all three roles
+# ─────────────────────────────────────────────
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def deposits(request):
     all_deposits = Deposit.objects.select_related('customer').order_by('-date')
     total_debtors = all_deposits.count()
@@ -990,11 +1102,14 @@ def deposits(request):
     })
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def add_deposit(request):
     customers = Customer.objects.all().order_by('name')
     if request.method == 'POST':
         body = request.POST
         errors = []
+
         try:
             deposit_amount = int(body.get('deposit_amount'))
             if deposit_amount <= 0:
@@ -1002,6 +1117,7 @@ def add_deposit(request):
         except (ValueError, TypeError):
             errors.append('Deposit amount must be a valid number.')
             deposit_amount = None
+
         try:
             total_balance = int(body.get('total_balance'))
             if total_balance < 0:
@@ -1009,6 +1125,7 @@ def add_deposit(request):
         except (ValueError, TypeError):
             errors.append('Total balance must be a valid number.')
             total_balance = None
+
         try:
             expiry_date = date_type.fromisoformat(body.get('expiry_date'))
             if expiry_date <= date_type.today():
@@ -1016,11 +1133,13 @@ def add_deposit(request):
         except (ValueError, TypeError):
             errors.append('Please enter a valid expiry date.')
             expiry_date = None
+
         customer_manual = (body.get('customer_manual') or '').strip()
         customer_field = body.get('customer')
         contact = body.get('contact', '').strip()
         nin = body.get('NIN', '').strip()
         selected_customer = None
+
         if not customer_field and not customer_manual:
             errors.append('Please select or enter a customer.')
         elif customer_field:
@@ -1047,7 +1166,7 @@ def add_deposit(request):
             for e in errors:
                 messages.error(request, e)
             return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS, 'data': body})
-        # determine customer object: prefer manual name if provided
+
         if customer_manual:
             customer_obj, created = Customer.objects.get_or_create(
                 NIN=nin,
@@ -1063,6 +1182,7 @@ def add_deposit(request):
                 customer_obj.NIN = nin
                 customer_obj.phone = contact
                 customer_obj.save(update_fields=['NIN', 'phone'])
+
         Deposit.objects.create(
             customer=customer_obj,
             item=body.get('item'),
@@ -1077,12 +1197,15 @@ def add_deposit(request):
     return render(request, 'deposit_reg.html', {'customers': customers, 'scheme_items': SCHEME_ITEMS})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def deposit_edit(request, pk):
     deposit = get_object_or_404(Deposit, pk=pk)
     customers = Customer.objects.all().order_by('name')
     if request.method == 'POST':
         body = request.POST
         errors = []
+
         try:
             deposit_amount = int(body.get('deposit_amount'))
             if deposit_amount <= 0:
@@ -1090,6 +1213,7 @@ def deposit_edit(request, pk):
         except (ValueError, TypeError):
             errors.append('Deposit amount must be a valid number.')
             deposit_amount = None
+
         try:
             total_balance = int(body.get('total_balance'))
             if total_balance < 0:
@@ -1097,16 +1221,20 @@ def deposit_edit(request, pk):
         except (ValueError, TypeError):
             errors.append('Total balance must be a valid number.')
             total_balance = None
+
         try:
             expiry_date = date_type.fromisoformat(body.get('expiry_date'))
         except (ValueError, TypeError):
             errors.append('Please enter a valid expiry date.')
             expiry_date = None
+
         if body.get('item') not in dict(SCHEME_ITEMS):
             errors.append('Only cement, iron sheets, and iron bars are eligible for the deposit scheme.')
+
         customer_obj = None
         if body.get('customer'):
             customer_obj = get_object_or_404(Customer, pk=body.get('customer'))
+
         contact = body.get('contact', '').strip()
         nin = body.get('NIN', '').strip()
         validate_customer_identity(
@@ -1118,14 +1246,17 @@ def deposit_edit(request, pk):
             customer_id=customer_obj.pk if customer_obj else None,
             require_nin=True,
         )
+
         if errors:
             for e in errors:
                 messages.error(request, e)
             return render(request, 'deposit_edit.html', {'deposit': deposit, 'customers': customers, 'scheme_items': SCHEME_ITEMS})
+
         if customer_obj.NIN != nin or customer_obj.phone != contact:
             customer_obj.NIN = nin
             customer_obj.phone = contact
             customer_obj.save(update_fields=['NIN', 'phone'])
+
         deposit.customer = customer_obj
         deposit.item = body.get('item')
         deposit.NIN = nin
@@ -1139,6 +1270,8 @@ def deposit_edit(request, pk):
     return render(request, 'deposit_edit.html', {'deposit': deposit, 'customers': customers, 'scheme_items': SCHEME_ITEMS})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def deposit_delete(request, pk):
     deposit = get_object_or_404(Deposit, pk=pk)
     if request.method == 'POST':
@@ -1148,6 +1281,8 @@ def deposit_delete(request, pk):
     return render(request, 'deposit_delete.html', {'deposit': deposit})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def deposit_progress(request, pk):
     deposit = get_object_or_404(Deposit, pk=pk)
     payments = deposit.payments.order_by('-date')
@@ -1171,17 +1306,12 @@ def deposit_progress(request, pk):
                 messages.error(request, e)
         else:
             balance_before = remaining
-            # Create the deposit payment
             deposit_payment = DepositPayment.objects.create(
                 deposit=deposit,
                 amount=amount,
                 note=request.POST.get('note', '').strip(),
             )
-            
-            # Calculate balance tracking
             balance_after = max(balance_before - amount, 0)
-            
-            # Create temporary receipt for this payment
             receipt = DepositPaymentReceipt.objects.create(
                 deposit_payment=deposit_payment,
                 customer_name=deposit.customer.name,
@@ -1198,7 +1328,6 @@ def deposit_progress(request, pk):
                 total_balance_owed=deposit.total_balance,
                 note=request.POST.get('note', '').strip(),
             )
-            
             messages.success(request, 'Installment payment recorded successfully.')
             return redirect('payment_receipt', receipt_id=receipt.id)
 
@@ -1208,59 +1337,58 @@ def deposit_progress(request, pk):
     })
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def deposit_receipts(request):
     receipts = Deposit.objects.select_related('customer').order_by('-date')
     return render(request, 'deposit_receipts.html', {'receipts': receipts})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def deposit_receipt(request, pk):
     deposit = get_object_or_404(Deposit, pk=pk)
     return render(request, 'deposit_reciept.html', {'deposit': deposit})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def payment_receipt(request, receipt_id):
-    """Display temporary receipt issued for a deposit payment"""
     receipt = get_object_or_404(DepositPaymentReceipt, pk=receipt_id)
     return render(request, 'payment_receipt.html', {'receipt': receipt})
 
 
+@login_required
+@user_passes_test(can_access_any, login_url='login')
 def payment_receipts_list(request):
-    """List all payment receipts with filtering options"""
     receipts = DepositPaymentReceipt.objects.select_related('deposit_payment__deposit__customer').order_by('-payment_date')
-    
-    # Filter by customer name if provided
+
     customer_filter = request.GET.get('customer', '').strip()
     if customer_filter:
         receipts = receipts.filter(customer_name__icontains=customer_filter)
-    
-    # Filter by date range if provided
+
     from_date = request.GET.get('from_date', '').strip()
     to_date = request.GET.get('to_date', '').strip()
-    
+
     if from_date:
         from datetime import datetime
         try:
-            from_datetime = datetime.fromisoformat(from_date)
-            receipts = receipts.filter(payment_date__gte=from_datetime)
+            receipts = receipts.filter(payment_date__gte=datetime.fromisoformat(from_date))
         except (ValueError, TypeError):
             pass
-    
+
     if to_date:
         from datetime import datetime
         try:
-            to_datetime = datetime.fromisoformat(to_date)
-            receipts = receipts.filter(payment_date__lte=to_datetime)
+            receipts = receipts.filter(payment_date__lte=datetime.fromisoformat(to_date))
         except (ValueError, TypeError):
             pass
-    
-    # Calculate totals
-    total_amount_paid = sum(r.amount_paid for r in receipts)
-    
+
     context = {
         'receipts': receipts,
         'customer_filter': customer_filter,
         'from_date': from_date,
         'to_date': to_date,
-        'total_amount_paid': total_amount_paid,
+        'total_amount_paid': sum(r.amount_paid for r in receipts),
     }
     return render(request, 'payment_receipts_list.html', context)
