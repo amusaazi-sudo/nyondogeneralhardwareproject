@@ -1,4 +1,4 @@
-<!-- edit a deposit record.  --> -->
+<!-- edit a deposit record.  --> 
 {% extends 'base.html' %}
 {% block content %}
 
@@ -19,6 +19,7 @@
 
 <div class="card shadow-sm" style="max-width: 650px;">
     <div class="card-body">
+        <!-- novalidate disables HTML5 validation allowing Django to handle it server side-->
         <form method="POST" novalidate>
             {% csrf_token %}
             <div class="row g-3">

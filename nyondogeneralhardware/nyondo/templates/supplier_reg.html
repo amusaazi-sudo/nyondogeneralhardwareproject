@@ -1,6 +1,4 @@
-<!-- COMMENT-HEADER -->
-<!-- Template: nyondo/templates/supplier_reg.html -->
-<!-- Use this template for UI pages and content rendering. -->
+<!-- supplier form -->
 {% extends 'base.html' %}
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -17,7 +15,7 @@
     </div>
 
     {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    <div class="alert alert-{{ message.tags }}" style="color: red;">{{ message }}</div>
     {% endfor %}
 
     <form method="post" class="row g-3" novalidate>
@@ -177,6 +175,9 @@
 </div>
 
 <script>
+    // this is a specification options map for dynamic dropdown population based on
+    //  selected product. It enhances user experience by showing relevant specifications 
+    // only for the chosen product category
     const specMap = {
         cement: [
             { value: 'cem_iin', label: 'CEM IIN' },

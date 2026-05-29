@@ -1,6 +1,3 @@
-# COMMENT-HEADER
-# File: nyondo/models.py
-# Simple review note: use this file for code logic and Django app behavior.
 from django.db import models
 
 # Create your models here.
@@ -26,7 +23,7 @@ IRON_SHEET_COLORS = [('red', 'Red'), ('blue', 'Blue'), ('green', 'Green'), ('bro
 class Stock(models.Model):
     product_name = models.CharField(max_length=25, choices=PRODUCT_CHOICES)
     specification = models.CharField(max_length=50, blank=True, null=True)
-    product_code = models.IntegerField(unique=True)
+    # product_code = models.IntegerField(unique=True)
     category = models.CharField(
     max_length=25,
     choices=[('electrical', 'Electrical'), ('plumbing', 'Plumbing'), ('building', 'Building')]

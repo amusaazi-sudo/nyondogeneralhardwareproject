@@ -1,6 +1,4 @@
-<!-- COMMENT-HEADER -->
-<!-- Template: nyondo/templates/payment_receipts_list.html -->
-<!-- Use this template for UI pages and content rendering. -->
+<!-- payment receipts list -->
 {% extends 'base.html' %}
 {% block content %}
 
@@ -144,19 +142,25 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- looping for receipts and showing details in table  -->
                         {% for receipt in receipts %}
                         <tr>
+                            <!-- displays the row number automatically using the django loop counter -->
                             <td>{{ forloop.counter }}</td>
                             <td>
+                                <!-- shows the unique payment receipt numbe -->
                                 <span class="badge bg-primary">{{ receipt.payment_receipt_number }}</span>
                             </td>
                             <td>
+                                <!-- customer name in bold -->
                                 <strong>{{ receipt.customer_name }}</strong>
                             </td>
                             <td>
+                                <!-- smaller text -->
                                 <small class="text-muted">{{ receipt.customer_phone }}</small>
                             </td>
                             <td>
+                                <!-- code element shows each character takes up equal horizontal space -->
                                 <code>{{ receipt.deposit_receipt_number }}</code>
                             </td>
                             <td>{{ receipt.item_name }}</td>

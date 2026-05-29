@@ -1,6 +1,4 @@
-<!-- COMMENT-HEADER -->
-<!-- Template: nyondo/templates/sales_reg.html -->
-<!-- Use this template for UI pages and content rendering. -->
+<!-- sales form -->
 {% extends 'base.html' %}
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -10,7 +8,7 @@
   <h2 class="mb-4">SALES REGISTER FORM</h2>
 
   {% for message in messages %}
-  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  <div class="alert alert-{{ message.tags }}" style="color: red;">{{ message }}</div>
   {% endfor %}
 
   <form method="post" class="row g-3" novalidate>
@@ -153,10 +151,11 @@
     </div>
 
     <div class="col-12">
-      <button type="submit" class="btn btn-primary">SAVE SALE AND ISSUE RECEIPT</button>
+      <button type="submit" class="btn btn-primary">SAVE SALE </button>
     </div>
 
     <script>
+      // shows or hides delivery details based on checkbox state
       document.addEventListener('DOMContentLoaded', function () {
         var deliveryCheckbox = document.getElementById('delivery');
         var deliveryDetails = document.getElementById('delivery-details');

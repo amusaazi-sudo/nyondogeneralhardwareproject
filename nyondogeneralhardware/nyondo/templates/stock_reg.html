@@ -1,6 +1,4 @@
-<!-- COMMENT-HEADER -->
-<!-- Template: nyondo/templates/stock_reg.html -->
-<!-- Use this template for UI pages and content rendering. -->
+<!-- stock form -->
 {% extends 'base.html' %}
 {% block content %}
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -10,7 +8,7 @@
   <h2 class="mb-4">STOCK REGISTER FORM</h2>
 
   {% for message in messages %}
-  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  <div class="alert alert-{{ message.tags }}" style="color: red;">{{ message }}</div>
   {% endfor %}
 
   <form method="post" class="row g-3" novalidate>
@@ -88,13 +86,13 @@
         {% endif %}
       </select>
     </div>
-
-    <!-- Product Code -->
+<!-- 
+    Product Code 
     <div class="col-md-6">
       <label for="product_code" class="form-label">Product Code</label>
       <input type="text" class="form-control" id="product_code" name="product_code" required
         value="{{ data.product_code|default:'' }}">
-    </div>
+    </div> -->
 
     <!-- Category -->
     <div class="col-md-6">

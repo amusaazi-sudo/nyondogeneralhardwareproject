@@ -1,6 +1,4 @@
-<!-- COMMENT-HEADER -->
-<!-- Template: nyondo/templates/login.html -->
-<!-- Use this template for UI pages and content rendering. -->
+<!-- login form -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -88,13 +86,14 @@
             Nyondo General Hardware
         </h1>
         <hr>
+        <!-- error messages from bootstrap -->
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }}">{{ message }}</div>
         {% endfor %}
         <form method="post" novalidate>
             {% csrf_token %}
-            <label for="Email">Email:</label>
-            <input type="text" id="Email" name="username" placeholder="username" required>
+            <label for="Email">Username:</label>
+            <input type="text" id="Username" name="username" placeholder="username" required>
 
             <label for="Password">Password:</label>
             <input type="password" id="Password" name="password" placeholder="Password" required>
@@ -104,5 +103,4 @@
 
 
 </body>
-
 </html>

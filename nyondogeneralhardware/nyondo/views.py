@@ -189,7 +189,7 @@ def add_stock(request):
         body = request.POST
         sent_product_name = body.get('product_name')
         sent_specification = body.get('specification', '').strip()
-        sent_product_code = body.get('product_code')
+        # sent_product_code = body.get('product_code')
         sent_category = body.get('category')
         sent_quantity = body.get('quantity')
         sent_buying_price = body.get('buying_price')
@@ -241,7 +241,7 @@ def add_stock(request):
         new_stock = Stock()
         new_stock.product_name = sent_product_name
         new_stock.specification = sent_specification or None
-        new_stock.product_code = sent_product_code
+        # new_stock.product_code = sent_product_code
         new_stock.category = sent_category
         new_stock.quantity = sent_quantity
         new_stock.buying_price = sent_buying_price

@@ -14,6 +14,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Sales</h5>
+                <!-- the brackets are displaying context of the total sales automatically -->
                 <p class="card-text text-black">Total: {{ sales_count }}</p>
             </div>
         </div>
@@ -22,6 +23,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Stock</h5>
+                    <!-- the brackets are displaying context of the total stock automatically -->
                 <p class="card-text text-black">Items: {{ stock_count }}</p>
             </div>
         </div>
@@ -30,6 +32,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Transport</h5>
+                    <!-- the brackets are displaying context of the total transport trips automatically -->
                 <p class="card-text text-black">Trips: {{ transport_count }}</p>
             </div>
         </div>
@@ -38,6 +41,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Credit Scheme</h5>
+                  <!-- the brackets are displaying context of the creditors automatically -->
                 <p class="card-text text-black">Active: {{ credit_count }}</p>
             </div>
         </div>
@@ -50,6 +54,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Deposit Scheme</h5>
+                <!-- the brackets are displaying context of the total deposit value automatically -->
                 <p class="card-text text-black">Total: UGX {{ deposit_scheme_value }}</p>
             </div>
         </div>
@@ -58,6 +63,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Receipts</h5>
+                <!-- the brackets are displaying context of the receipts for today automatically -->
                 <p class="card-text text-black">Today: {{ receipts_today }} receipts</p>
             </div>
         </div>
@@ -66,6 +72,7 @@
         <div class="card summary-card mb-3" style="border: none; border-top: 3px solid #64B5F6;">
             <div class="card-body">
                 <h5 class="card-title text-black">Debt Customers</h5>
+                <!-- the brackets are displaying context of the active debtors automatically -->
                 <p class="card-text text-black">{{ active_debtors }} active</p>
             </div>
         </div>
@@ -74,26 +81,26 @@
 
 <!--  QUICK ACCESS BOX 
       for fast navigation to Receipts and Reports.
-     Current hrefs point to sales_receipt and sales_dashboard - update as needed. -->
+    -->
 <div class="card mb-4" style="border: none; border-top: 3px solid #64B5F6;">
     <div class="card-header" style="border-bottom: 1px solid #ddd;">
         <i class="bi bi-lightning-charge-fill text-warning"></i>
         <span class="text-black fw-semibold"> Quick Access</span>
     </div>
     <div class="card-body d-flex gap-3 flex-wrap">
-        <!-- Button: navigates to the sales receipt page (name='sales_receipt' in urls.py) -->
+        <!-- Button: navigates to the sales receipt page -->
         <a href="{% url 'sales_receipt' %}" class="quick-access-btn">
             <i class="bi bi-receipt-cutoff"></i>
             <span>Receipts Records</span>
         </a>
-        <!-- Button: navigates to the sales dashboard/reports page (name='sales_dashboard' in urls.py) -->
+        <!-- Button: navigates to the sales dashboard/reports page -->
         <a href="{% url 'sales_dashboard' %}" class="quick-access-btn">
             <i class="bi bi-bar-chart-line-fill"></i>
             <span>Reports Records</span>
         </a>
     </div>
 </div>
-<!-- END QUICK ACCESS BOX  -->
+
 
 <!-- SIDE-BY-SIDE TABLES ROW 
      Both tables sit in a single Bootstrap row (col-md-6 each) so they
@@ -155,6 +162,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- to loop and display supply payments -->
                         {% for payment in recent_supplier_payments %}
                         <tr>
                             <td>{{ payment.date|date:'Y-m-d' }}</td>
@@ -163,6 +171,7 @@
                             <td>UGX {{ payment.amount }}</td>
                         </tr>
                         {% endfor %}
+                        <!-- to loop and display deposit payments -->
                         {% for payment in recent_deposit_payments %}
                         <tr>
                             <td>{{ payment.date|date:'Y-m-d' }}</td>
@@ -171,6 +180,7 @@
                             <td>UGX {{ payment.amount }}</td>
                         </tr>
                         {% endfor %}
+                        <!-- to display a message if no recent payments are recorded -->
                         {% if not recent_supplier_payments and not recent_deposit_payments %}
                         <tr>
                             <td colspan="4" class="text-center text-muted">No recent payments recorded.</td>
@@ -181,10 +191,9 @@
             </div>
         </div>
     </div>
-    <!-- END RIGHT: Recent Reports Table -->
-
+    
 </div>
-<!-- ===== END SIDE-BY-SIDE TABLES ROW ===== -->
+
 
 <style>
     /* Summary stat cards – hover highlight */
