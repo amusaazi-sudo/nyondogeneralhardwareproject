@@ -8,7 +8,7 @@
   <h2 class="mb-4">STOCK REGISTER FORM</h2>
 
   {% for message in messages %}
-  <div class="alert alert-{{ message.tags }}" style="color: red;">{{ message }}</div>
+  <div class="alert alert-{{ message.tags }} style="color: red;" ><strong>{{ message }}</strong></div>
   {% endfor %}
 
   <form method="post" class="row g-3" novalidate>
