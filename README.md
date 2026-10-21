@@ -2,6 +2,16 @@
 
 A Django web application for managing day-to-day operations at Nyondo General Hardware. It brings inventory, sales, customer accounts, supplier purchases, deposits, receipts, and business reports into one system.
 
+## Live demo
+
+**[Open the app](https://nyondogeneralhardwareproject-1.onrender.com)**
+
+Log in with the demo account:
+- **Username:** `demo`
+- **Password:** `Nyondo2026`
+
+The app runs on Render's free plan, so the first visit may take up to a minute while it wakes up. Demo data resets regularly.
+
 ## Features
 
 - **Inventory:** maintain stock quantities, product specifications, buying prices, and selling prices.
